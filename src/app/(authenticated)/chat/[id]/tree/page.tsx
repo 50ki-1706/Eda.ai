@@ -1,14 +1,12 @@
 "use client";
 import PageContainer from "@/components/common/PageContainer";
 import Sidebar from "@/components/common/Sidebar";
-import { apiClient } from "@/lib/trpc";
+import useTree from "@/hooks/domain/chat/tree/useTree";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
 import FormLabel from "@mui/material/FormLabel";
 import Switch from "@mui/material/Switch";
 import dynamic from "next/dynamic";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import type { RawNodeDatum } from "react-d3-tree";
 
 // Tree はクライアントのみで描画
@@ -17,87 +15,36 @@ const Tree = dynamic(() => import("react-d3-tree").then((m) => m.default), {
 });
 
 export default function Page() {
-  const params = useParams();
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [translate, setTranslate] = useState<{ x: number; y: number }>();
-  const [branchStructure, setBranchStructure] = useState<RawNodeDatum>();
-  const [isChecked, setIsChecked] = useState(false);
+  const {
+    translate,
+    handleBranchMerge,
+    handleBranchNavigation,
+    handleClick,
+    isChecked,
+    setIsChecked,
+    branchStructure,
+  } = useTree();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    if (typeof params.id !== "string") return;
-    (async () => {
-      try {
-        // Sidebar から渡される chatId は chat テーブルのものなので project ではなく chat ルーターを利用する
-        const res = await apiClient.chat.branch.structure.query({
-          chatId: params.id as string,
-        });
-        setBranchStructure(res);
-      } catch (e) {
-        console.error("Failed to fetch branch structure (chat):", e);
-      }
-    })();
-
-    // レイアウト計算（クライアントでのみ実行）
-    const handleResize = () => {
-      setTranslate({
-        x: window.innerWidth / 2 - 100,
-        y: window.innerHeight / 2,
-      });
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [mounted, params.id]);
-
-  if (!mounted || !translate || !branchStructure) return null;
+  if (!translate || !branchStructure) return null;
 
   const renderCustomNode = ({ nodeDatum }: { nodeDatum: RawNodeDatum }) => {
     const W = 200;
     const H = 50;
-    const branchId = nodeDatum?.attributes?.id;
+    const branchId: string | number | boolean | undefined =
+      nodeDatum?.attributes?.id;
     const isLeaf = !nodeDatum.children || nodeDatum.children.length === 0;
-
-    const handleBranchNavigation = () => {
-      if (branchId) router.push(`/chat/${params.id}/branch/${branchId}`);
-    };
-    const handleBranchMerge = async () => {
-      if (branchId) {
-        await apiClient.chat.branch.merge.mutate({
-          branchId: branchId as string,
-        });
-
-        const res = await apiClient.chat.branch.structure.query({
-          chatId: params.id as string,
-        });
-
-        setBranchStructure(res);
-        setIsChecked(false);
-      }
-    };
-
-    const handleClick = async () => {
-      if (isChecked) {
-        await handleBranchMerge();
-      } else {
-        handleBranchNavigation();
-      }
-    };
     return (
       <g
         role={branchId ? "button" : undefined}
         tabIndex={branchId ? 0 : -1}
-        onClick={handleClick}
+        onClick={() =>
+          handleClick(branchId, handleBranchMerge, handleBranchNavigation)
+        }
         onKeyDown={(e) => {
           if (!branchId) return;
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            handleBranchNavigation();
+            handleBranchNavigation(branchId);
           }
         }}
         style={{ cursor: branchId ? "pointer" : "default" }}
@@ -152,6 +99,7 @@ export default function Page() {
       </g>
     );
   };
+
   return (
     <PageContainer
       centerLayout={false}
