@@ -1,5 +1,5 @@
 "use client";
-import { apiClient } from "@/lib/trpc";
+import { useSidebar } from "@/hooks/common/useSidebar";
 import AddIcon from "@mui/icons-material/Add";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DehazeIcon from "@mui/icons-material/Dehaze";
@@ -13,58 +13,18 @@ import {
   ListItemText,
   ListSubheader,
 } from "@mui/material";
-import type { Chat, Project } from "@prisma/client";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 const drawerWidth = 240;
 
 const Sidebar = () => {
-  const [openDrawer, setOpenDrawer] = useState<boolean>(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [chats, setChats] = useState<Chat[]>([]);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    const fetchSidebarData = async () => {
-      try {
-        const [projRes, chatRes] = await Promise.all([
-          apiClient.project.list.query(),
-          apiClient.chat.getChatsByUserId.query(),
-        ]);
-        setProjects(
-          projRes.map((project) => ({
-            ...project,
-            createdAt: new Date(project.createdAt),
-            updatedAt: new Date(project.updatedAt),
-          })),
-        );
-        setChats(
-          chatRes.map((chat) => ({
-            ...chat,
-            createdAt: new Date(chat.createdAt),
-            updatedAt: new Date(chat.updatedAt),
-          })),
-        );
-      } catch (error) {
-        console.error("Failed to fetch sidebar data:", error);
-      }
-    };
-    fetchSidebarData();
-  }, []);
-
-  const toggleDrawer = () => {
-    setOpenDrawer((prev) => !prev);
-  };
-
-  const handleChatClick = (chatId: string) => {
-    router.push(`/chat/${chatId}/tree/`);
-  };
-
-  const handleAddChat = () => {
-    router.push("/home");
-  };
+  const {
+    openDrawer,
+    projects,
+    chats,
+    toggleDrawer,
+    handleChatClick,
+    handleAddChat,
+  } = useSidebar();
 
   return (
     <>
