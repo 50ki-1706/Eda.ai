@@ -1,17 +1,10 @@
-import { authClient } from "@/lib/auth-client";
+"use client";
+
+import { useLogout } from "@/hooks/common/useLogout";
 import { Button } from "@mui/material";
-import { useRouter } from "next/navigation";
+
 const LogoutButton = () => {
-  const router = useRouter();
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/login"); // redirect to login page
-        },
-      },
-    });
-  };
+  const { handleSignOut } = useLogout();
 
   return (
     <Button
