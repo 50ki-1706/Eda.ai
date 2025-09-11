@@ -2,11 +2,7 @@ import type { Content, Part } from "@google/genai";
 import { GoogleGenAI } from "@google/genai";
 import type { MessageInProject } from "@prisma/client";
 
-export const models = [
-  "gemini-2.0-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-2.5-flash-lite",
-] as const;
+export const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"] as const;
 
 export class Gemini {
   generateContent = async (
@@ -19,7 +15,7 @@ export class Gemini {
 
     const response = await ai.chats
       .create({
-        model: "gemini-2.0-flash-lite",
+        model: models[1],
         history: history,
         config: {
           systemInstruction: "日本語で簡潔めに回答してください。",
