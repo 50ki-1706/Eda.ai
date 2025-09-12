@@ -74,7 +74,7 @@ const Sidebar = () => {
             </ListSubheader>
           }
         >
-          {projects.map((project) => (
+          {[...projects].reverse().map((project) => (
             <ListItem key={project.id} disablePadding>
               <ListItemButton>
                 <ListItemText primary={project.name} />
@@ -100,7 +100,7 @@ const Sidebar = () => {
             </ListSubheader>
           }
         >
-          {chats.map((chat) => (
+          {[...chats].reverse().map((chat) => (
             <ListItem
               key={chat.id}
               disablePadding
