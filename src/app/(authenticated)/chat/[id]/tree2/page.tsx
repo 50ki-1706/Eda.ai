@@ -18,6 +18,7 @@ import {
 import { useCallback, useState } from "react";
 import "@xyflow/react/dist/style.css";
 import PageContainer from "@/components/common/PageContainer";
+// import useTree from '@/hooks/domain/chat/tree/useTree';
 
 const initialNodes: Node[] = [
   {
@@ -69,6 +70,14 @@ const CustomNode = () => {
 };
 
 const Page = () => {
+  // const {
+  //   handleBranchMerge,
+  //   handleBranchNavigation,
+  //   handleClick,
+  //   isChecked,
+  //   setIsChecked,
+  //   branchStructure,
+  // } = useTree();
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const NodeTypes = { custom: CustomNode };

@@ -18,7 +18,8 @@ export class Gemini {
         model: models[1],
         history: history,
         config: {
-          systemInstruction: "日本語で簡潔めに回答してください。",
+          systemInstruction:
+            "You are a helpful assistant that helps people find information.",
         },
       })
       .sendMessage({
@@ -87,7 +88,24 @@ export class Gemini {
     });
   };
 
-  generateSummaryPrompt = (inputText: string) => {
-    return `以下の質問からあなたが回答することを一行で教えてください${inputText}`;
+  generateSummaryPrompt = (inputText: string, aiResponse?: string) => {
+    const basePrompt = `あなたは、会話の要点を瞬時に把握し、的確なタイトルを付ける専門家です。
+
+    以下の制約条件に従って、与えられた会話の冒頭部分から、内容全体を最もよく表す簡潔なタイトルを生成してください。
+
+    # 制約条件
+    * 言語：会話で使われている言語と同じ言語を使用する（例：日本語の会話なら日本語）。
+    * 文字数：非常に短く、5〜10単語（または20文字）程度に収める。
+    * 内容：会話の最初の質問、または中心的なトピックを反映させる。
+    * 形式：タイトルとして自然な名詞や体言止めを基本とする。挨拶や一般的な表現（「こんにちは」「教えてください」など）は含めない。
+    * 出力：生成したタイトルのみを出力し、他の文章は含めない。
+
+    # 会話の冒頭部分
+    ${inputText}
+    ${aiResponse ? `AIの最初の回答: ${aiResponse}` : ""}
+
+    以上の条件を満たすタイトルを生成してください。`;
+
+    return basePrompt;
   };
 }

@@ -41,7 +41,7 @@ export class ProjectRepository {
       // BranchInProjectを作成
       const newBranch = await tx.branchInProject.create({
         data: {
-          summary: "main",
+          summary: summary,
           parentBranchId: null,
           chatId: newChat.id,
         },
@@ -126,7 +126,7 @@ export class ProjectRepository {
     });
   };
 
-  //chat内で一番古いブランチを取得する（mainブランチ）
+  //chat内で一番古いブランチを取得する
   getParentBranchInChat = async (chatId: string) => {
     const branches = await prisma.branchInProject.findMany({
       where: { chatId },

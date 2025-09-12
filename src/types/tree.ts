@@ -1,9 +1,12 @@
 /**
- * カスタムRawNodeDatum型定義
- * react-d3-treeのRawNodeDatumを拡張し、attributesをstringのみに限定
+
+ * @interface RawNodeDatum
+ * @property {string} name - label
+ * @property {Record<string, string>} [attributes] - 親のノードのid
+ * @property {RawNodeDatum[]} [children] - 子ノードの配列（再帰構造）
  */
 export interface RawNodeDatum {
-  name: string;
-  attributes?: Record<string, string>;
-  children?: RawNodeDatum[];
+  readonly name: string;
+  readonly attributes?: Record<string, string>;
+  readonly children?: RawNodeDatum[];
 }
