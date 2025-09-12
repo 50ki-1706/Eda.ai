@@ -36,6 +36,8 @@ export const chatRouter = router({
   new: procedure
     .input(generalCreateChatInputSchema)
     .mutation(async ({ input, ctx }) => {
+      // biome-ignore lint/suspicious/noConsoleLog: <explanation>
+      console.log("Chat.new input:", input);
       return await chatController.create(input, ctx.user.id);
     }),
   updatePinned: procedure
