@@ -61,7 +61,7 @@ export function useMessageInputBase(
         handleEncodedFiles,
       );
 
-      await onSendMessage(promptText, promptFiles ? promptFiles[0] : undefined);
+      await onSendMessage(promptText, promptFiles?.[0]);
 
       setText("");
       setFiles(null);
