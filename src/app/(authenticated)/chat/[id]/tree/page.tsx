@@ -38,10 +38,14 @@ export default function Page() {
         role={branchId ? "button" : undefined}
         tabIndex={branchId ? 0 : -1}
         onClick={() =>
-          handleClick(branchId, handleBranchMerge, handleBranchNavigation)
+          handleClick(
+            branchId as string,
+            handleBranchMerge,
+            handleBranchNavigation,
+          )
         }
         onKeyDown={(e) => {
-          if (!branchId) return;
+          if (!branchId || typeof branchId !== "string") return;
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             handleBranchNavigation(branchId);

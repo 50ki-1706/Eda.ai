@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/trpc";
+import type { RawNodeDatum } from "@/types/tree";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { RawNodeDatum } from "react-d3-tree";
 
 function useTree() {
   const params = useParams();
@@ -36,22 +36,19 @@ function useTree() {
     return () => window.removeEventListener("resize", handleResize);
   }, [params.id]);
 
-  const handleBranchNavigation = (
-    branchId: string | number | boolean | undefined,
-  ) => {
+  const handleBranchNavigation = (branchId: string) => {
     if (branchId) router.push(`/chat/${params.id}/branch/${branchId}`);
   };
 
-  const handleBranchMerge = async (
-    branchId: string | number | boolean | undefined,
-  ) => {
+  const handleBranchMerge = async (branchId: string) => {
+    const chatId: string = params.id as string;
     if (branchId) {
       await apiClient.chat.branch.merge.mutate({
-        branchId: branchId as string,
+        branchId: branchId,
       });
 
       const res = await apiClient.chat.branch.structure.query({
-        chatId: params.id as string,
+        chatId: chatId,
       });
 
       setBranchStructure(res);
@@ -60,13 +57,9 @@ function useTree() {
   };
 
   const handleClick = async (
-    branchId: string | number | boolean | undefined,
-    handleBranchMerge: (
-      branchId: string | number | boolean | undefined,
-    ) => Promise<void>,
-    handleBranchNavigation: (
-      branchId: string | number | boolean | undefined,
-    ) => void,
+    branchId: string,
+    handleBranchMerge: (branchId: string) => Promise<void>,
+    handleBranchNavigation: (branchId: string) => void,
   ): Promise<void> => {
     if (isChecked) {
       await handleBranchMerge(branchId);

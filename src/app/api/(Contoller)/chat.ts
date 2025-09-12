@@ -1,6 +1,6 @@
+import type { RawNodeDatum } from "@/types/tree";
 import type { Message } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import type { RawNodeDatum } from "react-d3-tree";
 import { Gemini } from "../(LLM)/gemini";
 import { ChatRepository } from "../(Repository)/chat";
 import type {
