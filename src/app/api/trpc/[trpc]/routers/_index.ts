@@ -1,7 +1,5 @@
-import { initTRPC } from "@trpc/server";
 import { authMiddleware } from "../middleware";
-
-import { ZodError } from "zod";
+import { router } from "../trpc";
 
 import { ProjectController } from "@/app/api/(Contoller)/project";
 import { ProjectRepository } from "@/app/api/(Repository)/project";
@@ -31,24 +29,7 @@ import {
   sendMessageInputSchema,
 } from "../../../(schema)/project/chat";
 
-const t = initTRPC.create({
-  errorFormatter(opts) {
-    const { shape, error } = opts;
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        zodError:
-          error.code === "BAD_REQUEST" && error.cause instanceof ZodError
-            ? error.cause.flatten()
-            : null,
-      },
-    };
-  },
-});
-
-export const router = t.router;
-export const procedure = t.procedure.use(authMiddleware);
+export const procedure = authMiddleware;
 
 const chatController = new ChatController();
 export const chatRouter = router({
@@ -75,7 +56,7 @@ export const chatRouter = router({
       .input(generalSendMessageInputSchema)
       .mutation(async ({ input }) => {
         try {
-          console.debug("SendMessage input:", input); // デバッグログ追加
+          console.debug("SendMessage input:", input);
           return await chatController.sendMessage(input);
         } catch (error) {
           console.error("SendMessage error:", error);
@@ -83,18 +64,17 @@ export const chatRouter = router({
         }
       }),
     merge: procedure
-      .input(generalMergeBranchInputSchema) // 変更
+      .input(generalMergeBranchInputSchema)
       .mutation(async ({ input }) => {
         await chatController.mergeBranch(input.branchId);
       }),
     new: procedure
       .input(generalNewBranchInputSchema)
       .mutation(async ({ input }) => {
-        // 変更
         return await chatController.createBranch(input);
       }),
     getMessages: procedure
-      .input(generalGetMessageInputSchema) // 変更
+      .input(generalGetMessageInputSchema)
       .query(async ({ input }) => {
         return await chatController.getMessages(input.branchId);
       }),
@@ -127,7 +107,6 @@ export const projectRouter = router({
     new: procedure
       .input(projectNewChatInputSchema)
       .mutation(async ({ input }) => {
-        // 変更
         return await projectController.createChat(input);
       }),
     branch: router({

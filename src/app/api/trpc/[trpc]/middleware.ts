@@ -1,10 +1,8 @@
 import { auth } from "@/auth";
-import { TRPCError, initTRPC } from "@trpc/server";
-import type { Context } from "./context";
+import { TRPCError } from "@trpc/server";
+import { publicProcedure } from "./trpc";
 
-const t = initTRPC.context<Context>().create();
-
-export const authMiddleware = t.middleware(async (opts) => {
+export const authMiddleware = publicProcedure.use(async (opts) => {
   // biome-ignore lint/suspicious/noConsoleLog: デバッグ用の一時的なログ
   console.log("Auth middleware called:", {
     hasHeaders: !!opts.ctx.req.headers,
