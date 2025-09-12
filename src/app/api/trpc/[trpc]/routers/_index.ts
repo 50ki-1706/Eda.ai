@@ -72,9 +72,15 @@ export const chatRouter = router({
         return await chatController.branchStructure(input);
       }),
     sendMessage: procedure
-      .input(generalSendMessageInputSchema) // 変更
+      .input(generalSendMessageInputSchema)
       .mutation(async ({ input }) => {
-        return await chatController.sendMessage(input);
+        try {
+          console.debug("SendMessage input:", input); // デバッグログ追加
+          return await chatController.sendMessage(input);
+        } catch (error) {
+          console.error("SendMessage error:", error);
+          throw error;
+        }
       }),
     merge: procedure
       .input(generalMergeBranchInputSchema) // 変更
