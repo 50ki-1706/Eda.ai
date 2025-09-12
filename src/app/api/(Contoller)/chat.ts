@@ -1,6 +1,6 @@
+import type { RawNodeDatum } from "@/types/tree";
 import type { Message } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import type { RawNodeDatum } from "react-d3-tree";
 import { Gemini } from "../(LLM)/gemini";
 import { ChatRepository } from "../(Repository)/chat";
 import type {
@@ -16,15 +16,14 @@ const chatRepository = new ChatRepository();
 
 export class ChatController {
   create = async (input: CreateChatInput, userId: string) => {
-    const [summary, resFromLLM] = await Promise.all([
-      gemini.generateContent(undefined, {
-        text: gemini.generateSummaryPrompt(input.promptText),
-      }),
-      gemini.generateContent(undefined, {
-        text: input.promptText,
-        file: input.promptFile,
-      }),
-    ]);
+    const resFromLLM = await gemini.generateContent(undefined, {
+      text: input.promptText,
+      file: input.promptFile,
+    });
+
+    const summary = await gemini.generateContent(undefined, {
+      text: gemini.generateSummaryPrompt(input.promptText, resFromLLM),
+    });
 
     const result = await chatRepository.create(
       summary,
@@ -175,7 +174,7 @@ export class ChatController {
     }
 
     const branchStructure: RawNodeDatum = {
-      name: "main",
+      name: parentBranch.summary,
       attributes: { id: parentBranch.id },
       children: [],
     };
