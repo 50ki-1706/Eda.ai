@@ -10,24 +10,23 @@ datasource db {
 model User {
   id            String    @id
   name          String
-  email         String
+  email         String    @unique
   emailVerified Boolean
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
-  sessions      Session[]
   accounts      Account[]
-  projects      Project[]
   chats         Chat[]
+  projects      Project[]
+  sessions      Session[]
 
-  @@unique([email])
   @@map("user")
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime
   updatedAt DateTime
   ipAddress String?
@@ -35,7 +34,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -44,7 +42,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -54,6 +51,7 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -70,101 +68,98 @@ model Verification {
 }
 
 model Project {
-  id          String   @id @default(uuid()) 
+  id          String          @id @default(uuid())
   instruction String
   name        String
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
   chats       ChatInProject[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("project")
 }
 
 model ChatInProject {
-  id        String   @id @default(uuid()) 
+  id        String            @id @default(uuid())
   summary   String
-  isPinned  Boolean  @default(false)
+  isPinned  Boolean           @default(false)
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
   branches  BranchInProject[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("chat_in_project")
 }
 
 model BranchInProject {
-  id              String           @id @default(uuid()) 
-  summary         String
-  parentBranchId  String?
-  parentBranch    BranchInProject?          @relation("BranchToBranch", fields: [parentBranchId], references: [id], onDelete: SetNull)
-  childBranches   BranchInProject[]         @relation("BranchToBranch")
-  chatId          String
-  chat            ChatInProject             @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  messages MessageInProject[]
-  createdAt       DateTime         @default(now())
+  id             String             @id @default(uuid())
+  summary        String
+  parentBranchId String?
+  chatId         String
+  createdAt      DateTime           @default(now())
+  chat           ChatInProject      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  parentBranch   BranchInProject?   @relation("BranchToBranch", fields: [parentBranchId], references: [id])
+  childBranches  BranchInProject[]  @relation("BranchToBranch")
+  messages       MessageInProject[]
 
   @@map("branch_in_project")
 }
 
 model MessageInProject {
-  id              String           @id @default(uuid()) 
-  promptText      String
-  promptFile      String?
-  parentId String?
-  parent   MessageInProject?  @relation("MessageToMessage", fields: [parentId], references: [id], onDelete: SetNull)
+  id         String             @id @default(uuid())
+  promptText String
+  promptFile String?
+  parentId   String?
+  response   String
+  branchId   String
+  createdAt  DateTime           @default(now())
+  branch     BranchInProject    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  parent     MessageInProject?  @relation("MessageToMessage", fields: [parentId], references: [id])
   children   MessageInProject[] @relation("MessageToMessage")
-  response        String
-  branchId        String
-  branch          BranchInProject           @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  createdAt       DateTime         @default(now())
-  
 
   @@map("message_in_project")
 }
 
-
 model Chat {
-  id        String   @id @default(uuid()) 
+  id        String   @id @default(uuid())
   summary   String
   isPinned  Boolean  @default(false)
-  branches  Branch[]
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  branches  Branch[]
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("chat")
 }
 
 model Branch {
-  id              String           @id @default(uuid()) 
-  summary         String
-  parentBranchId  String?
-  parentBranch    Branch?          @relation("BranchToBranch", fields: [parentBranchId], references: [id], onDelete: SetNull)
-  childBranches   Branch[]         @relation("BranchToBranch")
-  chatId          String
-  chat            Chat             @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  messages Message[]
-  createdAt       DateTime         @default(now())
+  id             String    @id @default(uuid())
+  summary        String
+  parentBranchId String?
+  chatId         String
+  createdAt      DateTime  @default(now())
+  chat           Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  parentBranch   Branch?   @relation("BranchToBranch", fields: [parentBranchId], references: [id])
+  childBranches  Branch[]  @relation("BranchToBranch")
+  messages       Message[]
 
   @@map("branch")
 }
 
 model Message {
-  id              String           @id @default(uuid()) 
-  promptText      String
-  promptFile      String?
-  parentId String?
-  parent   Message?  @relation("MessageToMessage", fields: [parentId], references: [id], onDelete: SetNull)
+  id         String    @id @default(uuid())
+  promptText String
+  promptFile String?
+  parentId   String?
+  response   String
+  branchId   String
+  createdAt  DateTime  @default(now())
+  branch     Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  parent     Message?  @relation("MessageToMessage", fields: [parentId], references: [id])
   children   Message[] @relation("MessageToMessage")
-  response        String
-  branchId        String
-  branch          Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  createdAt       DateTime         @default(now())
-  
 
   @@map("message")
 }
