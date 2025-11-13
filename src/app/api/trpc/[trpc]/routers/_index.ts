@@ -3,8 +3,6 @@ import { authMiddleware } from "../middleware";
 
 import { ZodError } from "zod";
 
-import { ProjectController } from "@/app/api/(Contoller)/project";
-import { ProjectRepository } from "@/app/api/(Repository)/project";
 import { ChatController } from "../../../(Contoller)/chat";
 import {
   branchStructureInputSchema as generalBranchStructureInputSchema,
@@ -15,21 +13,6 @@ import {
   sendMessageInputSchema as generalSendMessageInputSchema,
   updateChatIsPinnedInputSchema,
 } from "../../../(schema)/chat";
-import {
-  deleteProjectSchema,
-  instructionSchema,
-} from "../../../(schema)/project";
-import {
-  branchStructureInputSchema,
-  mergeBranchInputSchema,
-  newBranchInputSchema,
-} from "../../../(schema)/project/branch";
-import {
-  chatListInputSchema,
-  getMessageInputSchema,
-  newChatInputSchema as projectNewChatInputSchema,
-  sendMessageInputSchema,
-} from "../../../(schema)/project/chat";
 
 const t = initTRPC.create({
   errorFormatter(opts) {
@@ -95,69 +78,7 @@ export const chatRouter = router({
   }),
 });
 
-const projectController = new ProjectController();
-const projectRepository = new ProjectRepository();
-export const projectRouter = router({
-  delete: procedure.input(deleteProjectSchema).mutation(async ({ input }) => {
-    await projectRepository.deleteProject(input.projectId);
-  }),
-
-  list: procedure.query(async ({ ctx }) => {
-    const userId = ctx.user.id;
-    return await projectRepository.getProjectList(userId);
-  }),
-  updateInstruction: procedure
-    .input(instructionSchema)
-    .mutation(async ({ input }) => {
-      await projectRepository.updateInstruction(
-        input.projectId,
-        input.instruction,
-      );
-    }),
-  chat: router({
-    list: procedure.input(chatListInputSchema).query(async ({ input }) => {
-      return await projectRepository.getChatList(input.projectId);
-    }),
-    new: procedure
-      .input(projectNewChatInputSchema)
-      .mutation(async ({ input }) => {
-        // 変更
-        return await projectController.createChat(input);
-      }),
-    branch: router({
-      structure: procedure
-        .input(branchStructureInputSchema)
-        .query(async ({ input }) => {
-          return await projectController.branchStructure(input);
-        }),
-      getMessage: procedure
-        .input(getMessageInputSchema)
-        .query(async ({ input }) => {
-          return await projectRepository.getMessages(input.branchId);
-        }),
-      sendMessage: procedure
-        .input(sendMessageInputSchema)
-        .mutation(async ({ input }) => {
-          return await projectController.sendMessage(input);
-        }),
-      new: procedure.input(newBranchInputSchema).mutation(async ({ input }) => {
-        return await projectRepository.createBranch(
-          input.summary,
-          input.parentBranchId,
-          input.chatId,
-        );
-      }),
-      merge: procedure
-        .input(mergeBranchInputSchema)
-        .mutation(async ({ input }) => {
-          await projectController.mergeBranch(input.branchId);
-        }),
-    }),
-  }),
-});
-
 export const apiRoutes = router({
-  project: projectRouter,
   chat: chatRouter,
 });
 

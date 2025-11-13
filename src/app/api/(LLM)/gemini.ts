@@ -1,6 +1,6 @@
 import type { Content, Part } from "@google/genai";
 import { GoogleGenAI } from "@google/genai";
-import type { MessageInProject } from "@prisma/client";
+import type { Message } from "@prisma/client";
 
 export const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"] as const;
 
@@ -48,7 +48,7 @@ export class Gemini {
   };
 
   formatHistoryForGemini = (
-    history: MessageInProject[],
+    history: Message[],
   ): Array<{
     parts: Array<{ text?: string; inlineData?: { data: string | undefined } }>;
     role: string;
