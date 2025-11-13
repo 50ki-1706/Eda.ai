@@ -17,7 +17,6 @@ model User {
   updatedAt     DateTime
   accounts      Account[]
   chats         Chat[]
-  projects      Project[]
   sessions      Session[]
 
   @@map("user")
@@ -67,60 +66,6 @@ model Verification {
   @@map("verification")
 }
 
-model Project {
-  id          String          @id @default(uuid())
-  instruction String
-  name        String
-  userId      String
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  chats       ChatInProject[]
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("project")
-}
-
-model ChatInProject {
-  id        String            @id @default(uuid())
-  summary   String
-  isPinned  Boolean           @default(false)
-  projectId String
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  branches  BranchInProject[]
-  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@map("chat_in_project")
-}
-
-model BranchInProject {
-  id             String             @id @default(uuid())
-  summary        String
-  parentBranchId String?
-  chatId         String
-  createdAt      DateTime           @default(now())
-  chat           ChatInProject      @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  parentBranch   BranchInProject?   @relation("BranchToBranch", fields: [parentBranchId], references: [id])
-  childBranches  BranchInProject[]  @relation("BranchToBranch")
-  messages       MessageInProject[]
-
-  @@map("branch_in_project")
-}
-
-model MessageInProject {
-  id         String             @id @default(uuid())
-  promptText String
-  promptFile String?
-  parentId   String?
-  response   String
-  branchId   String
-  createdAt  DateTime           @default(now())
-  branch     BranchInProject    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  parent     MessageInProject?  @relation("MessageToMessage", fields: [parentId], references: [id])
-  children   MessageInProject[] @relation("MessageToMessage")
-
-  @@map("message_in_project")
-}
 
 model Chat {
   id        String   @id @default(uuid())
