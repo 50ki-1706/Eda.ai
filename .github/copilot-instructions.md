@@ -1,68 +1,78 @@
-# Copilot 指示書（Eda.ai プロジェクト用）
+# GitHub Copilot Code Review Instructions
 
-この指示書は、CopilotがEda.aiプロジェクトで生産的に作業するためのガイドラインです。
-コードレビュー観点（再利用性・可読性・命名・型安全性）は従来通り厳守してください。
+## このドキュメントについて
 
-## アーキテクチャ概要
+このドキュメントは、**GitHub Copilot によるコードレビュー時に必ず参照される**指示書です。
 
-- **Next.js App Router構成**（`src/app/`配下）で、Server Component/Client Componentを明確に分離。
-- **認証はbetter-auth**（`src/auth.ts`）で一元管理。Google認証・セッション管理はbetter-authのAPI経由。
-- **DBはPrisma/PosgreSQL**。スキーマは`prisma/schema.prisma`、マイグレーションは`npx prisma migrate dev`。
-- **型・ドメイン分離**：型は`src/types/`、ドメインロジックは`src/components/domain/`、共通UIは`src/components/common/`。
-- **API/DBアクセスはRepositoryパターン**：`src/app/api/(Repository)/`や`src/app/api/(Controller)/`で責務分離。
+### 重要事項
 
-## 開発ワークフロー
+- **レビューコメントは必ず日本語で記述してください。**
+- プロジェクトの詳細な仕様・技術スタック・コーディング規約については、ルートディレクトリの `AGENTS.md` を参照してください。
+- 技術別の詳細なレビュー指示は `.github/instructions/` ディレクトリ内のファイルを参照してください：
+  - `typescript.instructions.md`: TypeScript 固有のレビューポイント
+  - `react.instructions.md`: React固有のレビューポイント
+  - `nextjs.instructions.md`: Next.js 固有のレビューポイント
 
-- **初回セットアップ**
-  1. `npm i`
-  2. `.env`を配布ファイルから設置
-  3. `docker compose up -d` でDB起動
-  4. `npx prisma migrate dev` でマイグレ
-  5. `npm run dev` で開発サーバ起動
+## コードレビューの基本方針
 
-- **コミット前チェック**
-  - `lefthook`で`biome check`（lint/format）と`typecheck`（型チェック）が自動実行
-  - エラー時は`npm run format`や型修正必須
+### 前提条件
 
-- **コミットメッセージ**
-  - [Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/) に従う
-  - フォーマット: `<type>[optional scope]: <description>`
-    - 例: `feat: add user authentication`, `fix: resolve login bug`
-  - 主なタイプ: `feat` (新機能), `fix` (バグ修正), `docs` (ドキュメント), `style` (スタイル), `refactor` (リファクタ), `test` (テスト), `chore` (その他)
-  - 破壊的変更: `!` を付ける (例: `feat!: change API`)
-  - 理由: 自動化ツール（リリースノート生成、バージョン管理）との連携を容易にするため
+- レビューコメントは必ず日本語で行ってください。
+- 建設的で具体的なフィードバックを提供してください。
+- 重大な問題、潜在的なバグ、セキュリティ上の懸念に焦点を当ててください。
 
-- **認証フロー**
-  - サインイン/サインアウトはServer Action（例: `src/app/actions/auth.ts`）で実装し、クライアントからは`<form action={handleSignOut}>`等で呼び出す
-  - APIルート`/api/auth/[...auth]`はbetter-authの`toNextJsHandler`で自動生成
+### レビュー観点
 
-## プロジェクト固有のコーディング規約
+#### 1. コード品質
 
-- **命名規則**
-  - カスタム関数で`on`始まりは禁止（例外: 組み込みイベント）
-- **型安全性**
-  - `as`による型アサーションは原則禁止。型ガードやジェネリクスを優先
-- **再利用性**
-  - 型・UI・ロジックは共通化を最優先。重複実装は避ける
-- **可読性**
-  - 早期リターン推奨。ネスト深い場合は関数分割
+- **可読性**: コードは理解しやすく、適切に命名されているか
+- **保守性**: 将来の変更が容易に行えるか
+- **一貫性**: プロジェクトのコーディング規約に準拠しているか
+- **簡潔性**: 不必要に複雑になっていないか
 
-## 主要ディレクトリ・ファイル
+### レビューコメントの優先度
 
-- `src/auth.ts` … better-auth認証設定
-- `src/app/actions/` … Server Actions（認証・DB操作等）
-- `src/app/api/` … APIルート/Controller/Repository
-- `src/components/common/` … 汎用UI
-- `src/components/domain/` … ドメイン固有UI
-- `prisma/schema.prisma` … DBスキーマ
+- **🔴 Critical (重大)**: セキュリティ、データ損失、重大なバグ
+- **🟡 Important (重要)**: パフォーマンス問題、型安全性の欠如
+- **🔵 Minor (軽微)**: コードスタイル、命名の改善提案
+- **💡 Suggestion (提案)**: より良い実装方法の提案
 
-## 外部依存・統合
+## プロジェクト固有のレビューポイント
 
-- **better-auth** … 認証
-- **Prisma** … ORM
-- **MUI** … UIコンポーネント
-- **lefthook/biome** … Lint/Format/型チェック自動化
+### Next.js / React
 
----
+- Server Components と Client Components の適切な使い分け
+- `use client` ディレクティブの適切な使用
+- データフェッチングの最適化 (SWR の適切な使用)
 
-不明点や追加したい観点があればご指摘ください。内容を随時アップデートします。
+### データベース (Drizzle ORM)
+
+- SQL インジェクションのリスクがないか
+- トランザクションの適切な使用
+- インデックスの最適化
+
+### 認証 (Better Auth)
+
+- セッション管理の適切性
+- OAuth フローの実装の正確性
+- トークンの適切な取り扱い
+
+## レビュー除外項目
+
+以下の項目はレビュー対象外とします:
+
+- 自動生成されたコード (マイグレーション、型定義など)
+- サードパーティライブラリのコード
+- 設定ファイルの些細な変更
+
+## 参考資料
+
+プロジェクトの詳細な仕様、技術スタック、アーキテクチャについては、以下を参照してください:
+
+- `AGENTS.md`: プロジェクト全体の仕様と設計ガイドライン
+- `README.md`: セットアップとビルド手順
+- `.github/instructions/`: 技術別の詳細なレビュー指示
+- [react ドキュメント](https://ja.react.dev/reference/react)
+- [Next.js ドキュメント](https://nextjs.org/docs)
+- [Better Auth ドキュメント](https://www.better-auth.com/docs/)
+- [Prisma ドキュメント](https://www.prisma.io/docs/)
