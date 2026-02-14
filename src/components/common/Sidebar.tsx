@@ -4,7 +4,6 @@ import AddIcon from "@mui/icons-material/Add";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DehazeIcon from "@mui/icons-material/Dehaze";
 import {
-  Divider,
   Drawer,
   IconButton,
   List,
@@ -17,14 +16,8 @@ import {
 const drawerWidth = 240;
 
 const Sidebar = () => {
-  const {
-    openDrawer,
-    projects,
-    chats,
-    toggleDrawer,
-    handleChatClick,
-    handleAddChat,
-  } = useSidebar();
+  const { openDrawer, chats, toggleDrawer, handleChatClick, handleAddChat } =
+    useSidebar();
 
   return (
     <>
@@ -67,22 +60,6 @@ const Sidebar = () => {
         open={openDrawer}
         onClose={toggleDrawer}
       >
-        <List
-          subheader={
-            <ListSubheader component="div" id="project-list-subheader">
-              プロジェクト
-            </ListSubheader>
-          }
-        >
-          {[...projects].reverse().map((project) => (
-            <ListItem key={project.id} disablePadding>
-              <ListItemButton>
-                <ListItemText primary={project.name} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
         <List
           subheader={
             <ListSubheader

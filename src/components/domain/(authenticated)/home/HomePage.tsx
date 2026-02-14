@@ -1,42 +1,15 @@
 "use client";
 
-import LoadingIndicator from "@/components/common/LoadingIndicator";
 import LogoutButton from "@/components/common/LogoutButton";
 import MessageInputBar from "@/components/common/MessageInputBar";
 import PageContainer from "@/components/common/PageContainer";
 import Sidebar from "@/components/common/Sidebar";
-import { useProjects } from "@/hooks/common/useProjects";
 import { useFirstMessageInput } from "@/hooks/domain/home/useFirstMessageInput";
 import { Box, Snackbar, Stack, alpha } from "@mui/material";
-import { useEffect } from "react";
 import Title from "./Title";
 
 export default function HomePage() {
-  const { loading, error: projectError } = useProjects();
   const { toast, setToast, ...messageInput } = useFirstMessageInput();
-
-  useEffect(() => {
-    if (projectError) {
-      setToast(projectError);
-    }
-  }, [projectError, setToast]);
-
-  if (loading) {
-    return (
-      <PageContainer>
-        <Box
-          sx={{
-            minHeight: "100dvh",
-            width: "100%",
-            display: "grid",
-            placeItems: "center",
-          }}
-        >
-          <LoadingIndicator text="プロジェクトを読み込み中..." />
-        </Box>
-      </PageContainer>
-    );
-  }
 
   return (
     <PageContainer>
