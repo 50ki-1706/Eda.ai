@@ -11,21 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
       - name: setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 22
-      - uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: "node_modules"
-          key: npm-${{ hashFiles('package-lock.json') }}
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Prisma generate
-        run: npx prisma generate
+        run: pnpm exec prisma generate
 
       - name: Setup Biome
         uses: biomejs/setup-biome@v2

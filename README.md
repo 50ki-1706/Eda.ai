@@ -3,13 +3,13 @@
 ## 依存関係のインストール
 
 ```
-  npm i
+  pnpm install
 ```
 
 ## lefthook有効化
 
 ```
-npm run prepare
+pnpm prepare
 ```
 
 ## .envの作成と設定
@@ -31,13 +31,13 @@ docker desktopアプリを起動して、llm-branchを起動。
 ## マイグレーション
 
 ```
- npx prisma  migrate dev
+ pnpm exec prisma migrate dev
 ```
 
 ## サーバー起動
 
 ```
- npm run dev
+ pnpm dev
 ```
 
 # コミット時にエラーが出た場合
@@ -48,5 +48,5 @@ docker desktopアプリを起動して、llm-branchを起動。
 - typecheckでエラーが出た場合は型エラーを直してから、再度コミットしてください。
 
 ```
-  npm run format
+  pnpm format
 ```

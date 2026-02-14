@@ -49,14 +49,14 @@ Prisma を用いたデータベース操作、Better Auth による認証、tRPC
 
 ### セットアップと実行
 
-1. **依存関係インストール**: `npm install`
+1. **依存関係インストール**: `pnpm install`
 2. **DB起動**: `docker compose up -d`
-3. **マイグレーション**: `npx prisma migrate dev`
-4. **開発サーバ起動**: `npm run dev`
+3. **マイグレーション**: `pnpm exec prisma migrate dev`
+4. **開発サーバ起動**: `pnpm dev`
 
 ### コード品質管理
 
-- **Formatter/Linter**: `Biome` を使用。`npm run check`, `npm run format` で実行可能。
+- **Formatter/Linter**: `Biome` を使用。`pnpm check`, `pnpm format` で実行可能。
 - **Git Hooks**: `Lefthook` により、コミット時に自動チェック（Lint/Typecheck）が走ります。
 - **言語**: コメントアウトやドキュメントは日本語で記述すること。
 
