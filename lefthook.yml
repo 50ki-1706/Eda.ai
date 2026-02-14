@@ -2,7 +2,7 @@ pre-commit:
   commands:
     biome check:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      run: npx @biomejs/biome check .  --no-errors-on-unmatched --files-ignore-unknown=true --colors=off
+      run: pnpm exec biome check .  --no-errors-on-unmatched --files-ignore-unknown=true --colors=off
 
 
 post-merge:
@@ -12,15 +12,15 @@ post-merge:
         BASE_REF=${ORIG_HEAD:-HEAD^}
         CHANGED_FILES=$(git diff --name-only "$BASE_REF" HEAD | tr -d '\r')
         if echo "$CHANGED_FILES" | grep -x -q 'prisma/schema.prisma'; then
-          npx prisma db push || exit 1
+          pnpm exec prisma db push || exit 1
         fi
         true
-    npm-install-on-package-json-change:
+    pnpm-install-on-lockfile-change:
       run: |
         BASE_REF=${ORIG_HEAD:-HEAD^}
         CHANGED_FILES=$(git diff --name-only "$BASE_REF" HEAD | tr -d '\r')
-        if echo "$CHANGED_FILES" | grep -x -q 'package.json'; then
-          npm install || exit 1
+        if echo "$CHANGED_FILES" | grep -x -q 'pnpm-lock.yaml'; then
+          pnpm install || exit 1
         fi
         true
     prepare-on-lefthook-config-change:
@@ -28,6 +28,6 @@ post-merge:
         BASE_REF=${ORIG_HEAD:-HEAD^}
         CHANGED_FILES=$(git diff --name-only "$BASE_REF" HEAD | tr -d '\r')
         if echo "$CHANGED_FILES" | grep -x -q 'lefthook.yml'; then
-          npm run prepare || exit 1
+          pnpm prepare || exit 1
         fi
         true
