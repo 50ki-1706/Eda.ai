@@ -20,6 +20,7 @@ export function useMessageInput(
         promptFile,
         branchId: branchId as string,
         latestMessageId,
+        provider: "openrouter",
       });
       const messageWithDateObject = {
         ...res,

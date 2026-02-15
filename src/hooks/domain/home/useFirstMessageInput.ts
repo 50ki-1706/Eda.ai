@@ -10,6 +10,7 @@ export function useFirstMessageInput() {
       const res = await apiClient.chat.new.mutate({
         promptText,
         promptFile,
+        provider: "openrouter",
       });
       router.push(`/chat/${res.chat.id}/branch/${res.branch.id}`);
     },

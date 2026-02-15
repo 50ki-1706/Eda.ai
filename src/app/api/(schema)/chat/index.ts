@@ -8,6 +8,7 @@ export const createChatInputSchema = z.object({
       mimeType: z.string(),
     })
     .optional(),
+  provider: z.enum(["gemini", "openrouter"]),
 });
 
 export const sendMessageInputSchema = z.object({
@@ -20,6 +21,7 @@ export const sendMessageInputSchema = z.object({
     .optional(),
   branchId: z.string().uuid(),
   latestMessageId: z.string().uuid(),
+  provider: z.enum(["gemini", "openrouter"]),
 });
 
 export const getMessageInputSchema = z.object({
