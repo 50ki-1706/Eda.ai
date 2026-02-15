@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { Message } from "@prisma/client";
 
 export class ChatRepository {
   create = async (
@@ -141,6 +142,34 @@ export class ChatRepository {
   deleteBranch = async (branchId: string) => {
     return await prisma.branch.delete({
       where: { id: branchId },
+    });
+  };
+
+  /**
+   * 再帰 CTE でメッセージの parentId チェーンを一括取得する
+   * N+1 回のクエリを 1 回に削減
+   */
+  getMessageChain = async (messageId: string): Promise<Message[]> => {
+    return await prisma.$queryRaw<Message[]>`
+      WITH RECURSIVE message_chain AS (
+        SELECT * FROM "message" WHERE id = ${messageId}
+        UNION ALL
+        SELECT m.* FROM "message" m
+        INNER JOIN message_chain mc ON m.id = mc."parentId"
+      )
+      SELECT * FROM message_chain
+      ORDER BY "createdAt" ASC
+    `;
+  };
+
+  /**
+   * チャット内の全ブランチを一括取得する
+   * ループ内での個別取得（N+1）を回避
+   */
+  getAllBranchesInChat = async (chatId: string) => {
+    return await prisma.branch.findMany({
+      where: { chatId },
+      orderBy: { createdAt: "asc" },
     });
   };
 }
