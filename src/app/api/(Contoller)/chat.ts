@@ -1,5 +1,5 @@
 import type { RawNodeDatum } from "@/types/tree";
-import type { Message } from "@prisma/client";
+import type { Branch } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { Gemini } from "../(LLM)/gemini";
 import { OpenRouter } from "../(LLM)/openrouter";
@@ -51,7 +51,7 @@ export class ChatController {
   };
 
   sendMessage = async (input: SendMessageInput) => {
-    const history = await this.getMessageHistory(input.latestMessageId);
+    const history = await chatRepository.getMessageChain(input.latestMessageId);
     let res: string;
 
     if (input.provider === "openrouter") {
@@ -86,7 +86,14 @@ export class ChatController {
     const parentBranchId = branch.parentBranchId;
     if (!parentBranchId) throw new Error("Parent branch not found");
 
-    const descendantBranchIds = await this.getDescendantBranches(branchId);
+    // 全ブランチを一括取得し、メモリ上で子孫を探索（N+1 回避）
+    const allBranches = await chatRepository.getAllBranchesInChat(
+      branch.chatId,
+    );
+    const descendantBranchIds = this.collectDescendantBranchIds(
+      branchId,
+      allBranches,
+    );
 
     await chatRepository.updateBranchInMessage(
       parentBranchId,
@@ -131,49 +138,36 @@ export class ChatController {
     return await chatRepository.getMessages(branchId);
   };
 
-  private getMessageHistory = async (messageId: string) => {
-    const messageHistory: Message[] = [];
-    let currentMessageId: string | null = messageId;
-
-    while (currentMessageId) {
-      const message = await chatRepository.getSpecificMessage(currentMessageId);
-
-      if (!message) {
-        break;
+  private collectDescendantBranchIds = (
+    branchId: string,
+    allBranches: Branch[],
+  ): string[] => {
+    // 親子関係をマップに構築
+    const childrenMap = new Map<string, string[]>();
+    for (const branch of allBranches) {
+      if (branch.parentBranchId) {
+        const children = childrenMap.get(branch.parentBranchId) ?? [];
+        children.push(branch.id);
+        childrenMap.set(branch.parentBranchId, children);
       }
-
-      messageHistory.unshift(message);
-
-      currentMessageId = message.parentId;
     }
 
-    return messageHistory;
-  };
-
-  //幅優先探索でbranchIdの子孫ブランチを取得する
-  private getDescendantBranches = async (branchId: string) => {
-    const descendantBranchIds: string[] = [branchId];
+    // BFS で子孫ブランチ ID を収集
+    const descendantIds: string[] = [branchId];
     const queue: string[] = [branchId];
-    const visited = new Set<string>();
 
     while (queue.length > 0) {
       const currentId = queue.shift();
-
       if (!currentId) break;
 
-      const currentBranch =
-        await chatRepository.getDescendantBranches(currentId);
-      if (!currentBranch) break;
-
-      for (const child of currentBranch.childBranches) {
-        if (!visited.has(child.id)) {
-          visited.add(child.id);
-          descendantBranchIds.push(child.id);
-          queue.push(child.id);
-        }
+      const children = childrenMap.get(currentId) ?? [];
+      for (const childId of children) {
+        descendantIds.push(childId);
+        queue.push(childId);
       }
     }
-    return descendantBranchIds;
+
+    return descendantIds;
   };
 
   updateChatIsPinned = async (input: UpdateChatIsPinnedInput) => {
@@ -186,9 +180,9 @@ export class ChatController {
   };
 
   branchStructure = async (input: BranchStructureInput) => {
-    const parentBranch = await chatRepository.getParentBranchInChat(
-      input.chatId,
-    );
+    // 全ブランチを一括取得（N+1 回避）
+    const allBranches = await chatRepository.getAllBranchesInChat(input.chatId);
+    const parentBranch = allBranches.find((b) => b.parentBranchId === null);
     if (!parentBranch) {
       throw new TRPCError({
         code: "NOT_FOUND",
@@ -203,35 +197,20 @@ export class ChatController {
     };
 
     const branchMap = new Map<string, RawNodeDatum>();
-    const queue: string[] = [parentBranch.id];
-    const visited = new Set<string>();
-
-    visited.add(parentBranch.id);
     branchMap.set(parentBranch.id, branchStructure);
 
-    while (queue.length > 0) {
-      const currentBranchId = queue.shift();
+    // createdAt 昇順で取得しているため、親が必ず先に処理される
+    for (const branch of allBranches) {
+      if (branch.id === parentBranch.id) continue;
 
-      if (!currentBranchId) break;
+      const childNode: RawNodeDatum = {
+        name: branch.summary,
+        attributes: { id: branch.id },
+        children: [],
+      };
 
-      const branch =
-        await chatRepository.getDescendantBranches(currentBranchId);
-      if (!branch) break;
-
-      for (const child of branch.childBranches) {
-        if (!visited.has(child.id)) {
-          visited.add(child.id);
-          queue.push(child.id);
-          const childNode: RawNodeDatum = {
-            name: child.summary,
-            attributes: { id: child.id },
-            children: [],
-          };
-
-          branchMap.get(child.parentBranchId ?? "")?.children?.push(childNode);
-          branchMap.set(child.id, childNode);
-        }
-      }
+      branchMap.get(branch.parentBranchId ?? "")?.children?.push(childNode);
+      branchMap.set(branch.id, childNode);
     }
 
     return branchStructure;
