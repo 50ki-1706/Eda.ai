@@ -2,6 +2,7 @@ import type { RawNodeDatum } from "@/types/tree";
 import type { Message } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { Gemini } from "../(LLM)/gemini";
+import { OpenRouter } from "../(LLM)/openrouter";
 import { ChatRepository } from "../(Repository)/chat";
 import type {
   BranchStructureInput,
@@ -12,18 +13,31 @@ import type {
 } from "../(schema)/chat";
 
 const gemini = new Gemini();
+const openRouter = new OpenRouter();
 const chatRepository = new ChatRepository();
 
 export class ChatController {
   create = async (input: CreateChatInput, userId: string) => {
-    const resFromLLM = await gemini.generateContent(undefined, {
-      text: input.promptText,
-      file: input.promptFile,
-    });
+    let resFromLLM: string;
+    let summary: string;
 
-    const summary = await gemini.generateContent(undefined, {
-      text: gemini.generateSummaryPrompt(input.promptText, resFromLLM),
-    });
+    if (input.provider === "openrouter") {
+      resFromLLM = await openRouter.generateContent(undefined, {
+        text: input.promptText,
+        file: input.promptFile,
+      });
+      summary = await openRouter.generateContent(undefined, {
+        text: openRouter.generateSummaryPrompt(input.promptText, resFromLLM),
+      });
+    } else {
+      resFromLLM = await gemini.generateContent(undefined, {
+        text: input.promptText,
+        file: input.promptFile,
+      });
+      summary = await gemini.generateContent(undefined, {
+        text: gemini.generateSummaryPrompt(input.promptText, resFromLLM),
+      });
+    }
 
     const result = await chatRepository.create(
       summary,
@@ -38,12 +52,21 @@ export class ChatController {
 
   sendMessage = async (input: SendMessageInput) => {
     const history = await this.getMessageHistory(input.latestMessageId);
-    const formattedHistory = gemini.formatHistoryForGemini(history);
+    let res: string;
 
-    const res = await gemini.generateContent(formattedHistory, {
-      text: input.promptText,
-      file: input.promptFile,
-    });
+    if (input.provider === "openrouter") {
+      const formattedHistory = openRouter.formatHistoryForOpenRouter(history);
+      res = await openRouter.generateContent(formattedHistory, {
+        text: input.promptText,
+        file: input.promptFile,
+      });
+    } else {
+      const formattedHistory = gemini.formatHistoryForGemini(history);
+      res = await gemini.generateContent(formattedHistory, {
+        text: input.promptText,
+        file: input.promptFile,
+      });
+    }
 
     const newMessage = await chatRepository.createMessage(
       input.branchId,
