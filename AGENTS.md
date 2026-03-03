@@ -1,71 +1,77 @@
-# プロジェクト概要: Eda.ai
+# Project Overview: Eda.ai
 
-Eda.ai は、Next.js (App Router) をベースにしたチャットアプリケーションプロジェクトです。
-Prisma を用いたデータベース操作、Better Auth による認証、tRPC/Server Actions によるデータフェッチを採用しています。
-特徴として、チャットにおける「ブランチ（分岐）」機能を持つデータモデル（Project -> Chat -> Branch -> Message）が存在します。
+Eda.ai is a visual, branching AI chat application built on Next.js (App Router).
+It features a unique branching architecture where each `Chat` can spawn multiple `Branch` instances, and each `Branch` contains a linear sequence of `Message` records—enabling users to explore alternative conversation paths, similar to version control for chat.
 
-## 技術スタック
+**Core Feature**: Visual branching AI chat with tree-structured conversation paths (`Chat -> Branch -> Message`).
 
-| カテゴリ        | 技術              | 詳細/バージョン            |
-| --------------- | ----------------- | -------------------------- |
-| **Framework**   | Next.js           | v15.3.1 (App Router)       |
-| **Language**    | TypeScript        | v5.9.2                     |
-| **UI Library**  | React             | v19.0.0                    |
-| **Styling**     | Tailwind CSS      | v4.0                       |
-| **Components**  | MUI (Material UI) | v7.0.2 (Tailwindと併用)    |
-| **Database**    | PostgreSQL        | Dockerで運用               |
-| **ORM**         | Prisma            | v6.6.0                     |
-| **Auth**        | Better Auth       | v1.2.7                     |
-| **API/State**   | tRPC, SWR         | Server Actionsも併用       |
-| **Lint/Format** | Biome             | Lefthookでコミット時に実行 |
+## Tech Stack
 
-## ディレクトリ構成 (`src/`)
+| Category       | Technology        | Details/Version                 |
+| -------------- | ----------------- | ------------------------------- |
+| **Framework**  | Next.js           | v15.3.1 (App Router)            |
+| **Language**   | TypeScript        | v5.9.2                          |
+| **UI Library** | React             | v19.0.0                         |
+| **Styling**    | Tailwind CSS      | v4.0                            |
+| **Components** | MUI (Material UI) | v7.0.2 (used with Tailwind)     |
+| **Database**   | PostgreSQL        | Docker-based operation          |
+| **ORM**        | Prisma            | v6.6.0                          |
+| **Auth**       | Better Auth       | v1.2.7                          |
+| **API/State**  | tRPC, SWR         | Server Actions also used        |
+| **Lint/Format**| Biome             | Executed on commit via Lefthook  |
 
-- **`app/`**: Next.js App Router のルート定義
-  - `(authenticated)/`: 認証が必要なルート群
-  - `(unauthenticated)/`: 未認証でもアクセス可能なルート群（ログイン画面など）
-  - `actions/`: Server Actions 定義
-  - `api/`: API Routes (Next.js API Handler)
-- **`components/`**: UIコンポーネント
-- **`lib/`**: アプリケーション設定・インスタンス初期化
-  - `auth.ts`, `auth-client.ts`: Better Auth 設定
-  - `prisma.ts`: Prisma Client インスタンス
-  - `trpc.ts`: tRPC 設定
-- **`hooks/`**: カスタムフック
-- **`types/`**: 型定義
-- **`schema/`**: バリデーションスキーマなど
+## Directory Structure (`src/`)
 
-## データモデル概要
+- **`app/`**: Next.js App Router route definitions
+  - `(authenticated)/`: Routes requiring authentication
+  - `(unauthenticated)/`: Publicly accessible routes (login, etc.)
+  - `actions/`: Server Actions definitions
+  - `api/`: API Routes (Next.js API Handlers)
+- **`components/`**: UI components
+- **`lib/`**: Application configuration and instance initialization
+  - `auth.ts`, `auth-client.ts`: Better Auth configuration
+  - `prisma.ts`: Prisma Client instance
+  - `trpc.ts`: tRPC configuration
+- **`hooks/`**: Custom React hooks
+- **`types/`**: Type definitions
+- **`schema/`**: Validation schemas, etc.
 
-`prisma/schema.prisma` に基づく主要モデルの関係性:
+## Documentation Structure (`docs/`)
 
-- **User**: ユーザー。Account, Session, Project, Chat を持つ。
-- **Project**: チャットを管理するプロジェクト単位。
-- **Chat**: チャットセッション。
-- **Branch**: チャットの分岐（Gitのような木構造を持つ）。再帰的な親子関係 (`parentBranch`) を持つ。
-- **Message**: 各ブランチ内のメッセージ。
+For detailed specifications, always refer to the documentation files in the `docs/` directory:
 
-## 開発ガイドライン
+| File | When to Read |
+| ---- | ------------ |
+| `docs/database.md` | **For ER diagrams, table definitions, and self-referencing tree structures (Branch/Message).** Read this to understand the full data model and relationships. |
+| `docs/commands.md` | **For terminal commands.** Read this for setup, execution, database migrations, and quality control commands (pnpm, docker, prisma, biome). |
+| `docs/APIDOC.md` | **For API endpoints.** Read this for tRPC procedures, server actions, and endpoint specifications. |
+| `docs/page-transition.md` | **For routing and page flows.** Read this to understand navigation patterns and page transitions. |
+| `docs/design/design_system.md` | **For UI component rules.** Read this to understand the design system, component conventions, and styling patterns. |
+| `docs/design/color-palette.md` | **For styling and colors.** Read this for color definitions and theming guidance. |
+| `docs/decision/` | **For architecture decisions (ADRs).** Read files in this directory to understand why certain technologies and patterns were chosen. |
 
-### セットアップと実行
+## Data Model Overview
 
-1. **依存関係インストール**: `pnpm install`
-2. **DB起動**: `docker compose up -d`
-3. **マイグレーション**: `pnpm exec prisma migrate dev`
-4. **開発サーバ起動**: `pnpm dev`
+The core models are:
 
-### コード品質管理
+- **User**: The application user. Holds `Account`, `Session`, and `Chat` records.
+- **Chat**: A conversation container. Can have multiple `Branch` instances.
+- **Branch**: A conversation branch (tree-structured, similar to Git branches). Supports recursive parent-child relationships.
+- **Message**: A single message within a `Branch`.
 
-- **Formatter/Linter**: `Biome` を使用。`pnpm check`, `pnpm format` で実行可能。
-- **Git Hooks**: `Lefthook` により、コミット時に自動チェック（Lint/Typecheck）が走ります。
-- **言語**: コメントアウトやドキュメントは日本語で記述すること。
+> **Important**: For detailed schema relationships, field definitions, and the ER diagram, you **MUST** refer to `docs/database.md`.
 
-### 認証フロー
+## Development Guidelines
 
-- Better Auth を使用。
-- `src/lib/auth.ts` でサーバーサイド設定、`src/lib/auth-client.ts` でクライアントサイド設定を管理。
+### Tools
 
-### API / データフェッチ
+- **Formatter/Linter**: `Biome` is used. Commits automatically trigger lint/type checks via `Lefthook`.
+- **Authentication**: `Better Auth` handles authentication. Server-side config is in `src/lib/auth.ts`, client-side in `src/lib/auth-client.ts`.
+- **API/Data Fetching**: `tRPC` and `Server Actions` are used appropriately. Endpoints are in `src/app/api`.
 
-- tRPC および Server Actions を適材適所で使い分ける方針と見受けられます。
-- `src/app/api` には tRPC や Auth 用のエンドポイントが配置されています。
+> **Important**: For setup, execution, and quality control commands, you **MUST** refer to `docs/commands.md`.
+
+## Crucial Agent Instruction
+
+**Code comments and newly created documentation files MUST be written in Japanese.**
+You may think and output conversational responses in English if permitted, but the codebase artifacts (comments, inline docs, new markdown files) must remain in Japanese.
