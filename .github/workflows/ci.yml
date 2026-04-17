@@ -32,4 +32,4 @@ jobs:
         run: biome ci
 
       - name: TypeScript type checking
-        run: bash -c tsc --noEmit
+        run: pnpm run typecheck
