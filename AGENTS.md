@@ -1,3 +1,7 @@
+## Post-Implementation Verification
+
+コードベースに変更を加えた後は、**必ず** `verify` skill をロードし、記載されている確認手順に従うこと。これは省略可能な推奨事項ではなく、実装プロセスの一部として必須である。
+
 # Project Overview: Eda.ai
 
 Eda.ai is a visual, branching AI chat application built on Next.js (App Router).
@@ -7,18 +11,18 @@ It features a unique branching architecture where each `Chat` can spawn multiple
 
 ## Tech Stack
 
-| Category       | Technology        | Details/Version                 |
-| -------------- | ----------------- | ------------------------------- |
-| **Framework**  | Next.js           | v15.3.1 (App Router)            |
-| **Language**   | TypeScript        | v5.9.2                          |
-| **UI Library** | React             | v19.0.0                         |
-| **Styling**    | Tailwind CSS      | v4.0                            |
-| **Components** | MUI (Material UI) | v7.0.2 (used with Tailwind)     |
-| **Database**   | PostgreSQL        | Docker-based operation          |
-| **ORM**        | Prisma            | v6.6.0                          |
-| **Auth**       | Better Auth       | v1.2.7                          |
-| **API/State**  | tRPC, SWR         | Server Actions also used        |
-| **Lint/Format**| Biome             | Executed on commit via Lefthook  |
+| Category        | Technology        | Details/Version                 |
+| --------------- | ----------------- | ------------------------------- |
+| **Framework**   | Next.js           | v15.3.1 (App Router)            |
+| **Language**    | TypeScript        | v5.9.2                          |
+| **UI Library**  | React             | v19.0.0                         |
+| **Styling**     | Tailwind CSS      | v4.0                            |
+| **Components**  | MUI (Material UI) | v7.0.2 (used with Tailwind)     |
+| **Database**    | PostgreSQL        | Docker-based operation          |
+| **ORM**         | Prisma            | v6.6.0                          |
+| **Auth**        | Better Auth       | v1.2.7                          |
+| **API/State**   | tRPC, SWR         | Server Actions also used        |
+| **Lint/Format** | Biome             | Executed on commit via Lefthook |
 
 ## Directory Structure (`src/`)
 
@@ -40,15 +44,15 @@ It features a unique branching architecture where each `Chat` can spawn multiple
 
 For detailed specifications, always refer to the documentation files in the `docs/` directory:
 
-| File | When to Read |
-| ---- | ------------ |
-| `docs/database.md` | **For ER diagrams, table definitions, and self-referencing tree structures (Branch/Message).** Read this to understand the full data model and relationships. |
-| `docs/commands.md` | **For terminal commands.** Read this for setup, execution, database migrations, and quality control commands (pnpm, docker, prisma, biome). |
-| `docs/APIDOC.md` | **For API endpoints.** Read this for tRPC procedures, server actions, and endpoint specifications. |
-| `docs/page-transition.md` | **For routing and page flows.** Read this to understand navigation patterns and page transitions. |
-| `docs/design/design_system.md` | **For UI component rules.** Read this to understand the design system, component conventions, and styling patterns. |
-| `docs/design/color-palette.md` | **For styling and colors.** Read this for color definitions and theming guidance. |
-| `docs/decision/` | **For architecture decisions (ADRs).** Read files in this directory to understand why certain technologies and patterns were chosen. |
+| File                           | When to Read                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/database.md`             | **For ER diagrams, table definitions, and self-referencing tree structures (Branch/Message).** Read this to understand the full data model and relationships. |
+| `docs/commands.md`             | **For terminal commands.** Read this for setup, execution, database migrations, and quality control commands (pnpm, docker, prisma, biome).                   |
+| `docs/APIDOC.md`               | **For API endpoints.** Read this for tRPC procedures, server actions, and endpoint specifications.                                                            |
+| `docs/page-transition.md`      | **For routing and page flows.** Read this to understand navigation patterns and page transitions.                                                             |
+| `docs/design/design_system.md` | **For UI component rules.** Read this to understand the design system, component conventions, and styling patterns.                                           |
+| `docs/design/color-palette.md` | **For styling and colors.** Read this for color definitions and theming guidance.                                                                             |
+| `docs/decision/`               | **For architecture decisions (ADRs).** Read files in this directory to understand why certain technologies and patterns were chosen.                          |
 
 ## Data Model Overview
 
