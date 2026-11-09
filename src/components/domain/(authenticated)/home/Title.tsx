@@ -1,20 +1,17 @@
-import { Stack, Typography } from "@mui/material";
+import styles from "./Title.module.css";
 
+/** ホーム画面のタイトルとリード文 */
 const Title = () => {
   return (
-    <Stack spacing={1} alignItems="center" textAlign="center">
-      <Typography
-        variant="h4"
-        fontWeight={900}
-        letterSpacing={0.2}
-        sx={{ lineHeight: 1.15 }}
-      >
-        EDA.ai
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Branch, Compare, Merge — まずはメッセージを入力。
-      </Typography>
-    </Stack>
+    <div className={styles.wrapper}>
+      <p className={styles.eyebrow}>Branched AI Chat</p>
+      <h1 className={styles.title}>
+        Eda<span className={styles.accent}>.ai</span>
+      </h1>
+      <p className={styles.subtitle}>
+        分岐・比較・マージ。会話の流れを、好きなだけ枝分かれさせよう。
+      </p>
+    </div>
   );
 };
 

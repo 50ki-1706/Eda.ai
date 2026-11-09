@@ -42,7 +42,7 @@ Controller と Repository で責務を分けることで、以下のメリット
 
 **責務**: データベースアクセスの抽象化
 
-- Prisma Client を使用した CRUD 操作のみを行う
+- reylo で `.sql` クエリ（`src/queries/`）を実行する CRUD 操作のみを行う
 - ビジネスロジックを持たない
 - トランザクションや複雑なクエリ（再帰 CTE 等）もこの層に閉じ込める
 
@@ -66,14 +66,18 @@ Next.js App Router の Route Groups（括弧付きディレクトリ）を活用
 
 ```
 src/app/api/
-├── (Controller)/   # ビジネスロジック層
+├── (Contoller)/    # ビジネスロジック層（ディレクトリ名は既存の綴りを維持）
 ├── (Repository)/   # データアクセス層
 ├── (LLM)/          # LLM プロバイダー層
-├── (schema)/       # バリデーションスキーマ
-├── trpc/           # tRPC ルーター定義
+├── (schema)/       # バリデーションスキーマ（valibot）
+├── rpc/            # oRPC ハンドラー（型安全 RPC、/api/rpc）
+├── openapi/        # oRPC ハンドラー（OpenAPI 仕様 + Swagger UI、/api/openapi）
 └── lib.ts          # 共通ユーティリティ
 ```
 
 Route Groups は URL パスに影響を与えないため、純粋にコードの論理的な分類として機能する。
 ディレクトリ名を見るだけで各ファイルの責務が把握でき、チームメンバーが迷わずにコードを配置できる。
+
+なお、API の入口（コントラクト・ルーター・認証ミドルウェア・クライアント）は `src/lib/orpc/` に集約している。
+詳細は [oRPC + valibot への移行](./orpc_valibot_migration.md) を参照。
 

@@ -1,0 +1,162 @@
+/* メッセージ入力バー: カード型のコンポーザ */
+.wrapper {
+  width: 100%;
+}
+
+/* 添付ファイルのチップ */
+.fileRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-1);
+}
+
+.fileChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 6px 4px var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-background-sub);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.fileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileRemove {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+}
+
+.fileRemove:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-main);
+}
+
+/* 入力カード本体 */
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 10px 8px var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface-raised);
+  box-shadow: var(--elevation-1);
+  transition: border-color var(--transition-fast), box-shadow
+    var(--transition-fast);
+}
+
+.bar:hover {
+  border-color: var(--color-border-strong);
+}
+
+.bar:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 28px;
+  max-height: 280px;
+  padding: 4px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-main);
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  resize: none;
+  overflow-y: auto;
+  /* 1行から10行程度まで自然に伸びる（非対応環境では max-height で制限） */
+  field-sizing: content;
+}
+
+.textarea::placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* 下段のツールバー */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.toolButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition: background-color var(--transition-fast), color
+    var(--transition-fast);
+}
+
+.toolButton:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-main);
+}
+
+/* 送信ボタン: アクセントカラーの丸ボタン */
+.sendButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.sendButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.sendButton:disabled {
+  background-color: var(--color-surface-active);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: eda-spin 0.8s linear infinite;
+}
+
+/* モバイルでは余白を詰める */
+@media (max-width: 767px) {
+  .bar {
+    padding: 8px 8px 6px var(--space-2);
+    border-radius: var(--radius-lg);
+  }
+}

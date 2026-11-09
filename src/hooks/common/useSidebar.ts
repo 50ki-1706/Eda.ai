@@ -1,49 +1,78 @@
 "use client";
 
-import { apiClient } from "@/lib/trpc";
-import type { Chat } from "@prisma/client";
-import { useRouter } from "next/navigation";
+import { useIsDesktop } from "@/hooks/common/useMediaQuery";
+import { client } from "@/lib/orpc/client";
+import { useUiStore } from "@/stores/uiStore";
+import type { Chat } from "@/types";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+/**
+ * サイドバーの状態（チャット一覧・開閉）を扱うフック
+ *
+ * 開閉状態はグローバルな UI ストア（zustand）に保持し、
+ * デスクトップでは折りたたみ、モバイルではドロワーとして振る舞う。
+ */
 export const useSidebar = () => {
-  const [openDrawer, setOpenDrawer] = useState<boolean>(false);
   const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  const sidebarCollapsed = useUiStore((state) => state.sidebarCollapsed);
+  const drawerOpen = useUiStore((state) => state.drawerOpen);
+  const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+  const toggleDrawer = useUiStore((state) => state.toggleDrawer);
+  const setDrawerOpen = useUiStore((state) => state.setDrawerOpen);
+
+  const isDesktop = useIsDesktop();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // 現在開いているチャット（`/chat/[id]/...` の id）
+  const activeChatId = pathname?.split("/")[2] ?? null;
 
   useEffect(() => {
-    const fetchSidebarData = async () => {
+    let cancelled = false;
+
+    const fetchChats = async () => {
       try {
-        const chatRes = await apiClient.chat.getChatsByUserId.query();
-        setChats(
-          chatRes.map((chat) => ({
-            ...chat,
-            createdAt: new Date(chat.createdAt),
-            updatedAt: new Date(chat.updatedAt),
-          })),
-        );
+        const res = await client.chat.getChatsByUserId();
+        if (!cancelled) setChats(res);
       } catch (error) {
         console.error("Failed to fetch sidebar data:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
-    fetchSidebarData();
+
+    fetchChats();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const toggleDrawer = () => {
-    setOpenDrawer((prev) => !prev);
-  };
+  // デスクトップへ切り替わったらモバイル用ドロワーは閉じる
+  useEffect(() => {
+    if (isDesktop) setDrawerOpen(false);
+  }, [isDesktop, setDrawerOpen]);
 
   const handleChatClick = (chatId: string) => {
-    router.push(`/chat/${chatId}/tree/`);
+    router.push(`/chat/${chatId}/tree`);
+    setDrawerOpen(false);
   };
 
   const handleAddChat = () => {
     router.push("/home");
+    setDrawerOpen(false);
   };
 
   return {
-    openDrawer,
     chats,
+    loading,
+    activeChatId,
+    isDesktop,
+    sidebarCollapsed,
+    drawerOpen,
+    toggleSidebar,
     toggleDrawer,
     handleChatClick,
     handleAddChat,

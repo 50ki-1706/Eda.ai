@@ -1,175 +1,115 @@
 "use client";
-import PageContainer from "@/components/common/PageContainer";
-import Sidebar from "@/components/common/Sidebar";
-import useTree from "@/hooks/domain/chat/tree/useTree";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormGroup from "@mui/material/FormGroup";
-import FormLabel from "@mui/material/FormLabel";
-import Switch from "@mui/material/Switch";
-import dynamic from "next/dynamic";
-import type { RawNodeDatum } from "react-d3-tree";
+import AppShell from "@/components/common/AppShell";
+import Toast from "@/components/common/Toast";
+import StoryTree from "@/components/domain/(authenticated)/tree/StoryTree";
+import { useTree } from "@/hooks/domain/chat/tree/useTree";
+import { GitMerge, MessageSquare, Network } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import styles from "./page.module.css";
 
-// Tree はクライアントのみで描画
-const Tree = dynamic(() => import("react-d3-tree").then((m) => m.default), {
-  ssr: false,
-});
-
+/**
+ * ブランチツリー画面
+ * 会話の分岐構造を俯瞰し、ノードの選択でブランチへ移動／マージできる
+ */
 export default function Page() {
   const {
-    translate,
-    handleBranchMerge,
-    handleBranchNavigation,
-    handleClick,
-    isChecked,
-    setIsChecked,
+    chatId,
     branchStructure,
+    loading,
+    mergeMode,
+    setMergeMode,
+    handleNodeClick,
   } = useTree();
+  const [toast, setToast] = useState<string | null>(null);
 
-  if (!translate || !branchStructure) return null;
+  // ルートブランチの ID（会話画面へ戻る先）
+  const rootBranchId = branchStructure?.attributes.id ?? "";
 
-  const renderCustomNode = ({ nodeDatum }: { nodeDatum: RawNodeDatum }) => {
-    const W = 200;
-    const H = 50;
-    const branchId: string | number | boolean | undefined =
-      nodeDatum?.attributes?.id;
-    const isLeaf = !nodeDatum.children || nodeDatum.children.length === 0;
-    return (
-      <g
-        role={branchId ? "button" : undefined}
-        tabIndex={branchId ? 0 : -1}
-        onClick={() =>
-          handleClick(
-            branchId as string,
-            handleBranchMerge,
-            handleBranchNavigation,
-          )
-        }
-        onKeyDown={(e) => {
-          if (!branchId || typeof branchId !== "string") return;
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleBranchNavigation(branchId);
-          }
-        }}
-        style={{ cursor: branchId ? "pointer" : "default" }}
-      >
-        {/* 背景と枠線 */}
-        <rect
-          width={W}
-          height={H}
-          x={-W / 2}
-          y={-H / 2}
-          rx={6}
-          ry={6}
-          fill={isLeaf ? "#222" : "#000"} // 子ノードがない場合は色を変更
-          stroke="#222"
-          strokeWidth={1}
-        />
-        <rect
-          width={W - 6}
-          height={H - 6}
-          x={-(W - 6) / 2}
-          y={-(H - 6) / 2}
-          rx={4}
-          ry={4}
-          fill="none"
-          stroke="rgba(255,255,255,0.25)"
-          strokeWidth={1}
-        />
-        {/* テキストを foreignObject でラップ */}
-        <foreignObject x={-W / 2} y={-H / 2} width={W} height={H}>
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              fontFamily: "monospace",
-              fontSize: 12,
-              fontWeight: 500,
-              textAlign: "center",
-              pointerEvents: "none",
-              userSelect: "none",
-              padding: "0 5px",
-            }}
-          >
-            {nodeDatum.name.length > 24
-              ? `${nodeDatum.name.slice(0, 24)}...`
-              : nodeDatum.name}
-          </div>
-        </foreignObject>
-      </g>
-    );
+  const onNodeClick = async (branchId: string) => {
+    try {
+      await handleNodeClick(branchId);
+    } catch (error) {
+      console.error("Failed to handle branch click:", error);
+      setToast(
+        mergeMode ? "ブランチのマージに失敗しました" : "画面遷移に失敗しました",
+      );
+    }
   };
 
   return (
-    <PageContainer
-      centerLayout={false}
-      bgColor={isChecked ? "#A0A0A0" : "#fff"}
-    >
-      <div className="w-full h-screen flex">
-        <style jsx>{`
-          .detroit-path {
-            stroke: #000;
-            stroke-width: 2;
-            fill: none;
-            stroke-linecap: round;
-            opacity: 0.9;
-          }
-          .detroit-path:hover {
-            stroke: #444;
-            stroke-width: 3;
-          }
-        `}</style>
-        <style jsx global>{`
-          /* react-d3-tree のデフォルト文字色(黒)を上書き */
-          .rd3t-node text {
-            fill: #fff !important;
-            stroke: none;
-          }
-          .rd3t-node text tspan {
-            fill: #fff !important;
-          }
-        `}</style>
-        <Sidebar />
+    <AppShell>
+      <div className={styles.layout} data-merge-mode={mergeMode || undefined}>
+        <header className={styles.header}>
+          <div className={styles.headerText}>
+            <span className={styles.headerIcon} aria-hidden="true">
+              <Network size={16} />
+            </span>
+            <h1 className={styles.headerTitle}>ブランチツリー</h1>
+            <span className={styles.headerHint}>
+              ノードをクリックして会話を移動
+            </span>
+          </div>
 
-        <div
-          id="treeWrapper"
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-        >
-          {/* グラデーション等不要になったため defs を削除 */}
-          <Tree
-            data={branchStructure}
-            pathFunc="diagonal"
-            separation={{ siblings: 2.5, nonSiblings: 3 }}
-            translate={{ x: 300, y: 310 }}
-            nodeSize={{ x: 300, y: 120 }}
-            renderCustomNodeElement={renderCustomNode}
-            zoomable
-            enableLegacyTransitions
-            initialDepth={2}
-            pathClassFunc={() => "detroit-path"}
-          />
-        </div>
-        <FormGroup className="w-30 flex  items-center pt-2 pr-2">
-          <FormLabel component="legend">merge mode</FormLabel>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isChecked}
-                onChange={() => setIsChecked(!isChecked)}
+          <div className={styles.headerActions}>
+            <Link
+              href={`/chat/${chatId}/branch/${rootBranchId}`}
+              className={styles.headerLink}
+              aria-label="会話画面に戻る"
+              title="会話画面に戻る"
+            >
+              <MessageSquare size={16} aria-hidden="true" />
+              <span className={styles.headerLinkLabel}>会話に戻る</span>
+            </Link>
+
+            <label className={styles.mergeToggle}>
+              <GitMerge size={16} aria-hidden="true" />
+              <span className={styles.mergeLabel}>マージモード</span>
+              <input
+                type="checkbox"
+                className={styles.switchInput}
+                checked={mergeMode}
+                onChange={() => setMergeMode(!mergeMode)}
+                aria-label="マージモードを有効にする"
               />
-            }
-            label=""
-            sx={{ ml: 1 }}
-          />
-        </FormGroup>
+              <span className={styles.switchTrack} aria-hidden="true">
+                <span className={styles.switchThumb} />
+              </span>
+            </label>
+          </div>
+        </header>
+
+        {/* output 要素は暗黙的に role="status" を持つため role 属性は不要 */}
+        {mergeMode && (
+          <output className={styles.mergeBanner}>
+            マージモード: 統合したいブランチのノードをクリックしてください。
+          </output>
+        )}
+
+        <div className={styles.canvas}>
+          {loading && (
+            <p className={styles.status}>
+              <span className="eda-spinner" aria-hidden="true" />
+              ツリーを読み込み中…
+            </p>
+          )}
+          {!loading && !branchStructure && (
+            <p className={styles.status}>
+              ブランチ構造を取得できませんでした。
+            </p>
+          )}
+          {branchStructure && (
+            <StoryTree
+              data={branchStructure}
+              onNodeClick={(branchId) => {
+                void onNodeClick(branchId);
+              }}
+            />
+          )}
+        </div>
       </div>
-    </PageContainer>
+
+      <Toast message={toast} onClose={() => setToast(null)} />
+    </AppShell>
   );
 }

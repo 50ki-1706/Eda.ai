@@ -1,0 +1,114 @@
+"use client";
+
+import {
+  type ApiKeyProvider,
+  defaultModelId,
+  providerMeta,
+} from "@/constants/models";
+import type { ProviderAvailability } from "@/hooks/common/useUserSettings";
+import type { CatalogModel } from "@/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+interface UseModelPickerArgs {
+  /** 現在選択中のモデル ID */
+  modelId: string;
+  /** 選択中のモデルを変更する */
+  onModelChange: (modelId: string) => void;
+  /** プロバイダーごとの API キー登録状況 */
+  availability: ProviderAvailability[];
+  /** プロバイダーから取得した最新のモデル一覧 */
+  models: CatalogModel[];
+}
+
+/** モデルを探す（見つからなければ undefined） */
+const findModel = (
+  models: CatalogModel[],
+  id: string,
+): CatalogModel | undefined => models.find((model) => model.id === id);
+
+/**
+ * モデルピッカーの開閉状態と、選択肢の絞り込みを扱うフック
+ * - API キー未登録のプロバイダーのモデルは選択不可として表示する
+ * - 外側クリック・Escape で閉じる
+ */
+export const useModelPicker = ({
+  modelId,
+  onModelChange,
+  availability,
+  models,
+}: UseModelPickerArgs) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const registeredProviders = useMemo(
+    () =>
+      new Set(
+        availability
+          .filter((item) => item.registered)
+          .map((item) => item.provider),
+      ),
+    [availability],
+  );
+
+  const selected =
+    findModel(models, modelId) ?? findModel(models, defaultModelId);
+
+  /** 検索語で絞り込んだモデル（ラベル・ID の部分一致） */
+  const filtered = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    if (!keyword) return models;
+    return models.filter(
+      (model) =>
+        model.label.toLowerCase().includes(keyword) ||
+        model.modelId.toLowerCase().includes(keyword),
+    );
+  }, [models, query]);
+
+  /** プロバイダーごとにグループ化した選択肢 */
+  const grouped = useMemo(() => {
+    const groups = new Map<ApiKeyProvider, CatalogModel[]>();
+    for (const model of filtered) {
+      const list = groups.get(model.provider) ?? [];
+      list.push(model);
+      groups.set(model.provider, list);
+    }
+    return [...groups.entries()];
+  }, [filtered]);
+
+  const select = (model: CatalogModel) => {
+    if (!registeredProviders.has(model.provider)) return;
+    onModelChange(model.id);
+    setOpen(false);
+    setQuery("");
+  };
+
+  const toggle = () => setOpen((prev) => !prev);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+  }, []);
+
+  // Escape キーで閉じる
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, close]);
+
+  return {
+    open,
+    toggle,
+    close,
+    select,
+    selected,
+    grouped,
+    query,
+    setQuery,
+    registeredProviders,
+    providerLabel: (provider: ApiKeyProvider) => providerMeta[provider].label,
+  };
+};

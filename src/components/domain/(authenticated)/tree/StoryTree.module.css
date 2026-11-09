@@ -1,0 +1,143 @@
+/* ストーリーツリー: 独自実装のSVG分岐ツリー */
+
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.svg:active {
+  cursor: grabbing;
+}
+
+/* 物語の「道」 */
+.edge {
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke var(--transition-fast);
+}
+
+.edge:hover {
+  stroke: var(--color-primary);
+  stroke-width: 3;
+}
+
+/* ノードの背景（テーマに応じた面） */
+.nodeRect {
+  fill: var(--color-surface-raised);
+  stroke: var(--color-border);
+  transition: fill var(--transition-fast), stroke var(--transition-fast);
+}
+
+.node:hover .nodeRect {
+  fill: var(--color-surface-hover);
+  stroke: var(--color-primary);
+}
+
+/* ノードの内枠（アクセントのライン） */
+.nodeInnerRect {
+  fill: none;
+  stroke: var(--color-primary-soft);
+  stroke-width: 1;
+}
+
+/* ノードのラベル */
+.nodeLabel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-main);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  padding: 0 8px;
+  overflow: hidden;
+}
+
+/* 葉ノード（現在の到達点）はアクセントで強調する */
+.node[data-leaf] .nodeRect {
+  fill: var(--color-text-main);
+  stroke: var(--color-text-main);
+}
+
+.node[data-leaf] .nodeLabel {
+  color: var(--color-background-main);
+  font-weight: 700;
+}
+
+.node[data-leaf] .nodeInnerRect {
+  stroke: var(--color-primary-glow);
+}
+
+/* キーボードフォーカス時のリング */
+.node:focus-visible {
+  outline: none;
+}
+
+.node:focus-visible .nodeRect {
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+/* ズームコントロール: キャンバス右下のフローティングツールバー */
+.controls {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-raised);
+  box-shadow: var(--elevation-2);
+}
+
+.controlButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+  transition: background-color var(--transition-fast);
+}
+
+.controlButton:hover {
+  background-color: var(--color-surface-hover);
+}
+
+/* 拡大率の表示 */
+.zoomLabel {
+  padding: 2px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* ツリー本体: 初期位置の計算後にフェードインさせる */
+.stage {
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.stage[data-ready] {
+  opacity: 1;
+}

@@ -8,6 +8,7 @@
   "files": {
     "ignoreUnknown": false,
     "ignore": [
+      "**/.devenv/**",
       "**/node_modules/**",
       "**/dist/**",
       "**/build/**",
@@ -15,7 +16,8 @@
       "**/frourio.ts",
       "**/frourio.client.ts",
       "**/frourio.server.ts",
-      "**/components/ui/**"
+      "**/components/ui/**",
+      "**/*.sql"
     ]
   },
   "formatter": {
@@ -52,5 +54,17 @@
       "semicolons": "always",
       "trailingCommas": "all"
     }
-  }
+  },
+  "overrides": [
+    {
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      },
+      "include": ["**/tree/StoryTree.tsx"]
+    }
+  ]
 }

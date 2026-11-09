@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# devenv
+.devenv
+
+# playwright-cli（UI 検証時の一時成果物）
+/.playwright-cli/
+
+# pnpm のローカルストア
+/.pnpm-store/

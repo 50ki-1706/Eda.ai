@@ -1,181 +1,146 @@
 "use client";
 
-import CallSplitIcon from "@mui/icons-material/CallSplit";
-import {
-  Box,
-  IconButton,
-  Paper,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import type { Message } from "@prisma/client";
+import type { Message } from "@/types";
+import { GitBranch, Sparkles } from "lucide-react";
 import { memo } from "react";
 import type React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import styles from "./ChatMessageList.module.css";
 
-export type ChatActor = "user" | "bot";
-
-/* Bubble */
+/* ユーザー発言の吹き出し */
 interface BubbleProps {
-  mine?: boolean;
   text: string;
-  time?: string;
-  groupedTop?: boolean;
-  groupedBottom?: boolean;
 }
-const Bubble = memo(function Bubble({
-  mine,
-  text,
-  time,
 
-  groupedBottom,
-}: BubbleProps) {
+const UserBubble = memo(function UserBubble({ text }: BubbleProps) {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: mine ? "flex-end" : "flex-start",
-        mb: groupedBottom ? 0.5 : 1.25,
-      }}
-    >
-      <Paper
-        elevation={mine ? 1 : 0}
-        sx={(t) => ({
-          maxWidth: "100%",
-          px: 1.5,
-          py: 1,
+    <div className={styles.userRow}>
+      <div className={styles.userBubble}>{text}</div>
+    </div>
+  );
+});
 
-          bgcolor: mine ? t.palette.primary.main : t.palette.background.paper,
-          color: mine ? t.palette.primary.contrastText : t.palette.text.primary,
+/* AI 応答: 吹き出しを使わず、本文を読みやすく全幅で表示する */
+interface ResponseProps {
+  text: string;
+  onCreateBranch?: () => void;
+  /** ストリーミング中（確定前）の応答かどうか */
+  streaming?: boolean;
+}
 
-          transition: "transform .12s ease, opacity .12s ease",
-        })}
-      >
-        <div className="prose dark:prose-invert">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              h1: ({ node, ...props }) => (
-                <Typography variant="h1" {...props} />
-              ),
-              h2: ({ node, ...props }) => (
-                <Typography variant="h2" {...props} />
-              ),
-              h3: ({ node, ...props }) => (
-                <Typography variant="h3" {...props} />
-              ),
-              h4: ({ node, ...props }) => (
-                <Typography variant="h4" {...props} />
-              ),
-              h5: ({ node, ...props }) => (
-                <Typography variant="h5" {...props} />
-              ),
-              h6: ({ node, ...props }) => (
-                <Typography variant="h6" {...props} />
-              ),
-              a: ({ node, ...props }) => (
-                <a {...props} target="_blank" rel="noopener noreferrer" />
-              ),
-            }}
-          >
-            {text}
-          </ReactMarkdown>
-        </div>
-        {!!time && (
-          <Typography
-            variant="caption"
-            sx={{
-              opacity: 0.6,
-              display: "block",
-              textAlign: "right",
-              mt: 0.25,
-            }}
-          >
-            {time}
-          </Typography>
+const AssistantResponse = memo(function AssistantResponse({
+  text,
+  onCreateBranch,
+  streaming = false,
+}: ResponseProps) {
+  return (
+    <div className={styles.assistantRow}>
+      <span className={styles.avatar} aria-hidden="true">
+        <Sparkles size={16} />
+      </span>
+      <div className={styles.assistantBody}>
+        {text ? (
+          <div className={styles.markdown}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+          </div>
+        ) : (
+          // 本文がまだ届いていない間も行の高さを保ち、レイアウトの跳ねを防ぐ
+          streaming && <div className={styles.streamingPlaceholder} />
         )}
-      </Paper>
-    </Box>
+        {streaming && <span className={styles.cursor} aria-hidden="true" />}
+        {onCreateBranch && (
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.branchButton}
+              aria-label="この対話からブランチを作成"
+              title="この対話からブランチを作成"
+              onClick={onCreateBranch}
+            >
+              <GitBranch size={14} aria-hidden="true" />
+              <span>ブランチを作成</span>
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 });
 
 export const DateSeparator = memo(function DateSeparator({
   label,
-}: { label: string }) {
+}: {
+  label: string;
+}) {
   return (
-    <Stack direction="row" alignItems="center" spacing={2} sx={{ my: 2.5 }}>
-      <Box sx={{ flex: 1, height: 1, bgcolor: "divider" }} />
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Box sx={{ flex: 1, height: 1, bgcolor: "divider" }} />
-    </Stack>
+    <div className={styles.separator}>
+      <div className={styles.separatorLine} />
+      <span className={styles.separatorLabel}>{label}</span>
+      <div className={styles.separatorLine} />
+    </div>
   );
 });
 
 export interface ChatMessageListProps {
   messages: Message[];
+  /** ストリーミング中のアシスタント応答（確定前）。空文字なら未ストリーミング */
+  streamingText?: string;
+  /** ストリーミング中に送信したユーザーのプロンプト（確定前の吹き出し表示用） */
+  streamingPrompt?: string;
   dateLabel?: string;
   onCreateBranch?: (messageId: string) => void;
   chatListRef?: React.RefObject<HTMLDivElement | null>;
 }
+
+/**
+ * 会話のメッセージ一覧
+ * ユーザー発言は右寄せの吹き出し、AI 応答はアイコン付きの本文として表示する。
+ * ストリーミング中は確定前のユーザー発言とアシスタント応答を末尾に追加表示する。
+ */
 export const ChatMessageList = ({
   messages,
+  streamingText = "",
+  streamingPrompt = "",
   dateLabel = "Today",
   onCreateBranch,
   chatListRef,
 }: ChatMessageListProps) => {
-  return (
-    <Box sx={{ width: "100%", overflowY: "auto", py: 3, px: { xs: 2, md: 3 } }}>
-      <DateSeparator label={dateLabel} />
-      {messages.map((msg) => (
-        <Box key={msg.id}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <Box>
-              {msg.promptText && (
-                <Bubble mine text={msg.promptText} groupedBottom />
-              )}
-            </Box>
+  // 確定前の応答を表示するかどうか（本文が届く前の待機中も表示する）
+  const isStreaming = streamingText !== "" || streamingPrompt !== "";
 
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Box sx={{ width: "75%" }}>
-                {msg.response && <Bubble text={msg.response} groupedTop />}
-              </Box>
-              <Box
-                sx={{
-                  width: "75%",
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  mt: 0.25,
-                  pl: 1,
-                }}
-              >
-                <Tooltip title="この対話からブランチを作成" arrow>
-                  <span>
-                    <IconButton
-                      size="small"
-                      onClick={() => onCreateBranch?.(msg.id)}
-                    >
-                      <CallSplitIcon fontSize="small" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-      ))}
-      <Box ref={chatListRef} sx={{ height: "1px" }} />
-    </Box>
+  return (
+    <div className={styles.container}>
+      <div className={styles.inner}>
+        <DateSeparator label={dateLabel} />
+        {messages.length === 0 && !isStreaming && (
+          <p className={styles.empty}>
+            まだメッセージがありません。下の入力欄から話しかけてみましょう。
+          </p>
+        )}
+        {messages.map((msg) => (
+          <div key={msg.id} className={styles.messageGroup}>
+            {msg.promptText && <UserBubble text={msg.promptText} />}
+            {msg.response && (
+              <AssistantResponse
+                text={msg.response}
+                onCreateBranch={
+                  onCreateBranch ? () => onCreateBranch(msg.id) : undefined
+                }
+              />
+            )}
+          </div>
+        ))}
+        {isStreaming && (
+          // ストリーミング中（確定前）の1ユニット。ブランチ作成は確定後のみ表示する
+          <div className={styles.messageGroup} aria-live="polite">
+            {streamingPrompt && <UserBubble text={streamingPrompt} />}
+            <AssistantResponse text={streamingText} streaming />
+          </div>
+        )}
+        <div ref={chatListRef} className={styles.scrollAnchor} />
+      </div>
+    </div>
   );
 };
 

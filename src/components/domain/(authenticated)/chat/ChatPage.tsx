@@ -1,17 +1,17 @@
 "use client";
+import AppShell from "@/components/common/AppShell";
 import MessageInputBar from "@/components/common/MessageInputBar";
-import Sidebar from "@/components/common/Sidebar";
+import Toast from "@/components/common/Toast";
+import { useUserSettings } from "@/hooks/common/useUserSettings";
 import { useMessageInput } from "@/hooks/domain/chat/useMessageInput";
-import { apiClient } from "@/lib/trpc";
-import ParkIcon from "@mui/icons-material/Park";
-import { Box, Snackbar } from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import type { Message } from "@prisma/client";
+import { client } from "@/lib/orpc/client";
+import type { Message } from "@/types";
+import { GitBranch, Network } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ChatMessageList from "./ChatMessageList";
+import styles from "./ChatPage.module.css";
 
 const ChatPage = () => {
   const params = useParams();
@@ -22,47 +22,51 @@ const ChatPage = () => {
 
   const [messages, setMessages] = useState<Message[]>([]);
 
+  // ユーザー設定（選択中モデル・API キー登録状況）
+  const { modelId, availability, models, persistModel } = useUserSettings();
+
   const latestMessageId = useMemo(() => {
     return messages.length > 0 ? messages[messages.length - 1].id : null;
   }, [messages]);
 
-  const {
-    toast,
-    setToast,
-    messages: newMessages,
-    ...messageInput
-  } = useMessageInput(chatId, branchId, latestMessageId, messages, setMessages);
+  const { toast, setToast, streamingText, streamingPrompt, ...messageInput } =
+    useMessageInput(branchId, latestMessageId, setMessages, modelId);
 
+  const handleModelChange = async (nextModelId: string) => {
+    try {
+      await persistModel(nextModelId);
+    } catch (error) {
+      console.error("Failed to save model:", error);
+      setToast("モデルの保存に失敗しました");
+    }
+  };
+
+  // ブランチが切り替わったら、そのブランチのメッセージを読み直す
   useEffect(() => {
+    if (!branchId) return;
+
+    let cancelled = false;
     const fetchMessages = async () => {
-      if (branchId) {
-        try {
-          const res = await apiClient.chat.branch.getMessages.query({
-            branchId,
-          });
-          const messagesWithDateConversion = res.map((message) => ({
-            ...message,
-            createdAt: new Date(message.createdAt),
-          }));
-          setMessages(messagesWithDateConversion);
-        } catch (error) {
-          console.error("Failed to fetch messages:", error);
-        }
+      try {
+        const res = await client.chat.branch.getMessages({ branchId });
+        if (!cancelled) setMessages(res);
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
       }
     };
 
     fetchMessages();
+    return () => {
+      cancelled = true;
+    };
   }, [branchId]);
 
-  // メッセージが更新または取得されたら、チャットリストをスクロールする
+  // 最新メッセージが変わったら（取得・送信時）、チャットリストをスクロールする
+  // ストリーミング中は本文が伸び続けるため、差分の到着ごとに末尾へ追従させる
   useEffect(() => {
-    if (chatListRef.current) {
-      //console.debug()はuseEffectの依存配列のエラーを避けるためのものです。
-      const m = messages;
-      console.debug(m);
-      chatListRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+    if (!latestMessageId && !streamingText) return;
+    chatListRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [latestMessageId, streamingText]);
 
   const handleCreateBranch = async (messageId: string) => {
     const targetMessage = messages.find((m) => m.id === messageId);
@@ -74,15 +78,16 @@ const ChatPage = () => {
     }
 
     try {
+      // ブランチ名には分岐元メッセージの冒頭を使う
       const summary =
         targetMessage.promptText.substring(0, 50) +
         (targetMessage.promptText.length > 50 ? "..." : "");
 
-      const res = await apiClient.chat.branch.new.mutate({
+      const res = await client.chat.branch.new({
         summary,
         parentBranchId: branchId,
-        chatId: chatId,
-        messageId: messageId,
+        chatId,
+        messageId,
         promptText: targetMessage.promptText,
         response: targetMessage.response,
       });
@@ -96,63 +101,56 @@ const ChatPage = () => {
   };
 
   return (
-    <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      <Box sx={{ display: "flex", height: "100dvh" }}>
-        <Sidebar />
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            display: "grid",
-            gridTemplateRows: "1fr auto",
-            background: (t) =>
-              `linear-gradient(180deg, ${t.palette.background.default} 0%,
-               ${alpha(t.palette.primary.light, 0.06)} 100%)`,
-          }}
-        >
-          <ChatMessageList
-            messages={newMessages}
-            onCreateBranch={handleCreateBranch}
-            chatListRef={chatListRef}
-          />
-          <Box
-            sx={(t) => ({
-              position: "sticky",
-              bottom: 0,
-              zIndex: 1,
-              px: { xs: 1.25, md: 2 },
-              py: 1.25,
-              borderTop: `1px solid ${t.palette.divider}`,
-              backdropFilter: "blur(6px)",
-              background: alpha(t.palette.background.paper, 0.8),
-            })}
+    <AppShell>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <div className={styles.headerText}>
+            <span className={styles.headerIcon} aria-hidden="true">
+              <GitBranch size={16} />
+            </span>
+            <h1 className={styles.headerTitle}>チャット</h1>
+            <span className={styles.headerMeta}>
+              {messages.length} 件のメッセージ
+            </span>
+          </div>
+          <Link
+            href={`/chat/${chatId}/tree`}
+            className={styles.headerAction}
+            aria-label="ブランチツリーを表示"
+            title="ブランチツリーを表示"
           >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                px: { xs: 0.5, md: 2 },
-                width: "100%",
-                gap: 1,
-              }}
-            >
-              <MessageInputBar {...messageInput} sx={{ flex: 1 }} />
-              <Link href="/chat/[id]/branch/tree" as={`/chat/${chatId}/tree`}>
-                <ParkIcon />
-              </Link>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
+            <Network size={16} aria-hidden="true" />
+            <span className={styles.headerActionLabel}>ツリー</span>
+          </Link>
+        </div>
+      </header>
 
-      <Snackbar
-        open={!!toast}
-        autoHideDuration={2200}
-        onClose={() => setToast(null)}
-        message={toast ?? ""}
-      />
-    </Box>
+      <div className={styles.transcript}>
+        <ChatMessageList
+          messages={messages}
+          streamingText={streamingText}
+          streamingPrompt={streamingPrompt}
+          onCreateBranch={handleCreateBranch}
+          chatListRef={chatListRef}
+        />
+      </div>
+
+      <div className={styles.composerArea}>
+        <div className={styles.composerInner}>
+          <MessageInputBar
+            {...messageInput}
+            modelId={modelId}
+            onModelChange={handleModelChange}
+            modelAvailability={availability}
+            models={models}
+            placeholder="返信を入力…"
+          />
+          <p className={styles.hint}>Enter で送信 / Shift + Enter で改行</p>
+        </div>
+      </div>
+
+      <Toast message={toast} onClose={() => setToast(null)} />
+    </AppShell>
   );
 };
 

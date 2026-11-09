@@ -1,0 +1,18 @@
+/* トースト通知: 画面下部中央に浮かべて表示する */
+.toast {
+  position: fixed;
+  bottom: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1300;
+  max-width: min(90vw, 480px);
+  padding: 10px var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-main);
+  box-shadow: var(--elevation-3);
+  font-size: var(--font-size-caption);
+  white-space: pre-wrap;
+  animation: eda-rise-in var(--transition-base);
+}
