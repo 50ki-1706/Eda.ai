@@ -8,7 +8,7 @@ import {
   parseModelId,
   providerMeta,
 } from "@/constants/models";
-import { apiClient } from "@/lib/trpc";
+import { client } from "@/lib/orpc/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 /** モデルピッカーに渡す、プロバイダーごとの利用可否 */
@@ -137,8 +137,8 @@ export const useUserSettings = () => {
     const fetchSettings = async () => {
       try {
         const [settings, catalog] = await Promise.all([
-          apiClient.settings.get.query(),
-          apiClient.settings.getModels.query(),
+          client.settings.get(),
+          client.settings.getModels(),
         ]);
         setModelId(settings.modelId);
         setModels(catalog);
@@ -160,7 +160,7 @@ export const useUserSettings = () => {
   /** 選択をサーバーへ保存する（失敗時は呼び出し側でトースト表示） */
   const persistModel = useCallback(async (nextModelId: string) => {
     setModelId(nextModelId);
-    await apiClient.settings.saveModel.mutate({ modelId: nextModelId });
+    await client.settings.saveModel({ modelId: nextModelId });
   }, []);
 
   return { modelId, availability, models, loading, persistModel, setModelId };

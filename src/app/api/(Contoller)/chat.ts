@@ -1,6 +1,6 @@
-import type { Branch } from "@/types";
+import type { Branch, Chat, Message } from "@/types";
 import type { RawNodeDatum } from "@/types/tree";
-import { TRPCError } from "@trpc/server";
+import { ORPCError } from "@orpc/server";
 import { ChatRepository } from "../(Repository)/chat";
 import type {
   BranchStructureInput,
@@ -14,47 +14,85 @@ import { SettingsController } from "./settings";
 const chatRepository = new ChatRepository();
 const settingsController = new SettingsController();
 
+/** チャットのストリーミングイベント */
+export type ChatStreamEvent =
+  | { type: "delta"; text: string }
+  | { type: "done"; chat: Chat; branch: Branch; message: Message };
+
+/** ブランチへのメッセージ送信のストリーミングイベント */
+export type MessageStreamEvent =
+  | { type: "delta"; text: string }
+  | { type: "done"; message: Message };
+
 export class ChatController {
   /**
-   * 新規チャットを作成する
-   * LLM にプロンプトを送信してレスポンスと要約を生成し、Chat・Branch・Message を一括で永続化する
+   * 新規チャットをストリーミングで作成する
+   * LLM のレスポンスを差分（delta）として逐次返し、完了後に要約を生成して
+   * Chat・Branch・Message を一括で永続化し、最後に done イベントで返す
    * @param input - ユーザーのプロンプト情報（テキスト・添付ファイル・モデル ID）
    * @param userId - チャットを作成するユーザーの ID
-   * @returns 作成された Chat, Branch, Message のオブジェクト
+   * @param signal - クライアント切断時に LLM 呼び出しを中断するための AbortSignal
    */
-  create = async (input: CreateChatInput, userId: string) => {
+  createStream = async function* (
+    input: CreateChatInput,
+    userId: string,
+    signal?: AbortSignal,
+  ): AsyncGenerator<ChatStreamEvent, void, unknown> {
     // ユーザーが登録した API キーと選択中モデルからプロバイダーを組み立てる
     const { llm } = await settingsController.resolveLLMProvider(
       userId,
       input.modelId,
     );
 
-    // ユーザーのプロンプトに対する LLM のレスポンスを取得
-    const resFromLLM = await llm.generateContent(undefined, {
-      text: input.promptText,
-      file: input.promptFile,
-    });
+    // LLM のレスポンスを差分として逐次返しつつ、全文を連結して保持する
+    let fullText = "";
+    for await (const delta of llm.streamContent(
+      undefined,
+      { text: input.promptText, file: input.promptFile },
+      signal,
+    )) {
+      fullText += delta;
+      yield { type: "delta", text: delta };
+    }
+
+    // クライアントが切断された場合は、途中までのテキストを破棄して保存しない
+    if (signal?.aborted) return;
 
     // プロンプトとレスポンスからチャットのタイトル（要約）を自動生成
-    const summary = await llm.generateSummary(input.promptText, resFromLLM);
+    const summary = await llm.generateSummary(input.promptText, fullText);
 
-    return await chatRepository.create(
+    // 要約生成中に切断された場合も保存しない
+    if (signal?.aborted) return;
+
+    const { chat, branch, message } = await chatRepository.create(
       summary,
       userId,
       input.promptText,
       input.promptFile?.data ?? null,
-      resFromLLM,
+      fullText,
     );
+
+    yield {
+      type: "done",
+      chat: chat as Chat,
+      branch: branch as Branch,
+      message: message as Message,
+    };
   };
 
   /**
-   * 既存チャットにメッセージを送信する
-   * 過去の会話履歴を LLM に渡してコンテキストを維持したレスポンスを生成する
+   * 既存チャットにメッセージをストリーミングで送信する
+   * 過去の会話履歴を LLM に渡してコンテキストを維持したレスポンスを逐次返し、
+   * 完了後に Message を永続化して done イベントで返す
    * @param input - メッセージ情報（プロンプト・ブランチ ID・直前メッセージ ID・モデル ID）
    * @param userId - 送信するユーザーの ID（API キーの解決に使用）
-   * @returns 作成されたユーザーメッセージと AI レスポンスを含む Message
+   * @param signal - クライアント切断時に LLM 呼び出しを中断するための AbortSignal
    */
-  sendMessage = async (input: SendMessageInput, userId: string) => {
+  sendMessageStream = async function* (
+    input: SendMessageInput,
+    userId: string,
+    signal?: AbortSignal,
+  ): AsyncGenerator<MessageStreamEvent, void, unknown> {
     const { llm } = await settingsController.resolveLLMProvider(
       userId,
       input.modelId,
@@ -63,19 +101,29 @@ export class ChatController {
     // 直前メッセージから親チェーンを辿って会話履歴を取得
     const history = await chatRepository.getMessageChain(input.latestMessageId);
 
-    // 会話履歴付きで LLM にリクエストし、文脈を踏まえたレスポンスを取得
-    const res = await llm.generateContent(history, {
-      text: input.promptText,
-      file: input.promptFile,
-    });
+    // 会話履歴付きで LLM にリクエストし、差分を逐次返しつつ全文を連結する
+    let fullText = "";
+    for await (const delta of llm.streamContent(
+      history,
+      { text: input.promptText, file: input.promptFile },
+      signal,
+    )) {
+      fullText += delta;
+      yield { type: "delta", text: delta };
+    }
 
-    return await chatRepository.createMessage(
+    // クライアントが切断された場合は、途中までのテキストを破棄して保存しない
+    if (signal?.aborted) return;
+
+    const message = await chatRepository.createMessage(
       input.branchId,
       input.promptText,
       input.promptFile?.data ?? null,
-      res,
+      fullText,
       input.latestMessageId,
     );
+
+    yield { type: "done", message: message as Message };
   };
 
   /**
@@ -85,10 +133,12 @@ export class ChatController {
    */
   mergeBranch = async (branchId: string) => {
     const branch = await chatRepository.getSpecificBranch(branchId);
-    if (!branch) throw new Error("Branch not found");
+    if (!branch)
+      throw new ORPCError("NOT_FOUND", { message: "Branch not found" });
 
     const parentBranchId = branch.parentBranchId;
-    if (!parentBranchId) throw new Error("Parent branch not found");
+    if (!parentBranchId)
+      throw new ORPCError("NOT_FOUND", { message: "Parent branch not found" });
 
     // 全ブランチを一括取得し、メモリ上で子孫を探索（N+1 回避）
     const allBranches = await chatRepository.getAllBranchesInChat(
@@ -124,7 +174,7 @@ export class ChatController {
     // 分岐元メッセージを取得し、その親を新ブランチの最初のメッセージの親として設定
     const message = await chatRepository.getSpecificMessage(input.messageId);
     if (!message)
-      throw new TRPCError({ code: "NOT_FOUND", message: "Message not found" });
+      throw new ORPCError("NOT_FOUND", { message: "Message not found" });
 
     await chatRepository.createMessage(
       newBranch.id,
@@ -234,14 +284,13 @@ const collectDescendantBranchIds = (
  *
  * @param allBranches - チャット内の全ブランチ配列（createdAt 昇順）
  * @returns ルートブランチを起点としたツリー構造
- * @throws TRPCError ルートブランチが見つからない場合
+ * @throws ORPCError ルートブランチが見つからない場合
  */
 const buildBranchTree = (allBranches: Branch[]): RawNodeDatum => {
   // ルートブランチ（parentBranchId が null）を特定
   const parentBranch = allBranches.find((b) => b.parentBranchId === null);
   if (!parentBranch) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
+    throw new ORPCError("NOT_FOUND", {
       message: "Parent branch not found",
     });
   }

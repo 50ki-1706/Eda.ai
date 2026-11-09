@@ -25,11 +25,14 @@ const UserBubble = memo(function UserBubble({ text }: BubbleProps) {
 interface ResponseProps {
   text: string;
   onCreateBranch?: () => void;
+  /** ストリーミング中（確定前）の応答かどうか */
+  streaming?: boolean;
 }
 
 const AssistantResponse = memo(function AssistantResponse({
   text,
   onCreateBranch,
+  streaming = false,
 }: ResponseProps) {
   return (
     <div className={styles.assistantRow}>
@@ -37,9 +40,15 @@ const AssistantResponse = memo(function AssistantResponse({
         <Sparkles size={16} />
       </span>
       <div className={styles.assistantBody}>
-        <div className={styles.markdown}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
-        </div>
+        {text ? (
+          <div className={styles.markdown}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+          </div>
+        ) : (
+          // 本文がまだ届いていない間も行の高さを保ち、レイアウトの跳ねを防ぐ
+          streaming && <div className={styles.streamingPlaceholder} />
+        )}
+        {streaming && <span className={styles.cursor} aria-hidden="true" />}
         {onCreateBranch && (
           <div className={styles.actions}>
             <button
@@ -75,6 +84,10 @@ export const DateSeparator = memo(function DateSeparator({
 
 export interface ChatMessageListProps {
   messages: Message[];
+  /** ストリーミング中のアシスタント応答（確定前）。空文字なら未ストリーミング */
+  streamingText?: string;
+  /** ストリーミング中に送信したユーザーのプロンプト（確定前の吹き出し表示用） */
+  streamingPrompt?: string;
   dateLabel?: string;
   onCreateBranch?: (messageId: string) => void;
   chatListRef?: React.RefObject<HTMLDivElement | null>;
@@ -83,18 +96,24 @@ export interface ChatMessageListProps {
 /**
  * 会話のメッセージ一覧
  * ユーザー発言は右寄せの吹き出し、AI 応答はアイコン付きの本文として表示する。
+ * ストリーミング中は確定前のユーザー発言とアシスタント応答を末尾に追加表示する。
  */
 export const ChatMessageList = ({
   messages,
+  streamingText = "",
+  streamingPrompt = "",
   dateLabel = "Today",
   onCreateBranch,
   chatListRef,
 }: ChatMessageListProps) => {
+  // 確定前の応答を表示するかどうか（本文が届く前の待機中も表示する）
+  const isStreaming = streamingText !== "" || streamingPrompt !== "";
+
   return (
     <div className={styles.container}>
       <div className={styles.inner}>
         <DateSeparator label={dateLabel} />
-        {messages.length === 0 && (
+        {messages.length === 0 && !isStreaming && (
           <p className={styles.empty}>
             まだメッセージがありません。下の入力欄から話しかけてみましょう。
           </p>
@@ -112,6 +131,13 @@ export const ChatMessageList = ({
             )}
           </div>
         ))}
+        {isStreaming && (
+          // ストリーミング中（確定前）の1ユニット。ブランチ作成は確定後のみ表示する
+          <div className={styles.messageGroup} aria-live="polite">
+            {streamingPrompt && <UserBubble text={streamingPrompt} />}
+            <AssistantResponse text={streamingText} streaming />
+          </div>
+        )}
         <div ref={chatListRef} className={styles.scrollAnchor} />
       </div>
     </div>

@@ -22,7 +22,7 @@ src/app/
 │           │       └── page.tsx    # チャット画面（特定ブランチでの対話）
 │           └── tree/
 │               └── page.tsx        # ブランチ木構造ビュー (StoryTree: 独自SVGコンポーネント)
-├── api/                    # API Routes (tRPC, Better Auth 等)
+├── api/                    # API Routes (oRPC (/api/rpc, /api/openapi), Better Auth 等)
 ├── layout.tsx              # ルートレイアウト
 └── page.tsx                # アプリのルート（/loginへリダイレクト）
 ```

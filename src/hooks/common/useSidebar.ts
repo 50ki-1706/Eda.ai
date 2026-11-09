@@ -1,7 +1,7 @@
 "use client";
 
 import { useIsDesktop } from "@/hooks/common/useMediaQuery";
-import { apiClient } from "@/lib/trpc";
+import { client } from "@/lib/orpc/client";
 import { useUiStore } from "@/stores/uiStore";
 import type { Chat } from "@/types";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,7 @@ export const useSidebar = () => {
   useEffect(() => {
     const fetchSidebarData = async () => {
       try {
-        const chatRes = await apiClient.chat.getChatsByUserId.query();
+        const chatRes = await client.chat.getChatsByUserId();
         setChats(chatRes);
       } catch (error) {
         console.error("Failed to fetch sidebar data:", error);

@@ -20,8 +20,11 @@
     "@ai-sdk/openai-compatible": "^3.0.87",
     "@better-auth/kysely-adapter": "^1.7.18",
     "@openrouter/ai-sdk-provider": "^3.1.0",
-    "@trpc/client": "^11.4.4",
-    "@trpc/server": "^11.4.4",
+    "@orpc/client": "1.16.2",
+    "@orpc/contract": "1.16.2",
+    "@orpc/openapi": "1.16.2",
+    "@orpc/server": "1.16.2",
+    "@orpc/valibot": "1.16.2",
     "ai": "^7.0.166",
     "better-auth": "^1.7.18",
     "formidable": "^3.5.3",
@@ -38,7 +41,7 @@
     "remark-gfm": "^4.0.1",
     "reylo": "^0.7.0",
     "swr": "^2.3.3",
-    "zod": "^3.24.3",
+    "valibot": "^1.5.0",
     "zustand": "^5.1.0"
   },
   "devDependencies": {

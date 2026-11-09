@@ -3,7 +3,7 @@
 import type { SettingsState } from "@/app/api/(Contoller)/settings";
 import AppShell from "@/components/common/AppShell";
 import Toast from "@/components/common/Toast";
-import { apiClient } from "@/lib/trpc";
+import { client } from "@/lib/orpc/client";
 import { KeyRound, Palette, Settings2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ApiKeyForm from "./ApiKeyForm";
@@ -20,7 +20,7 @@ export default function SettingsPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await apiClient.settings.get.query();
+      const res = await client.settings.get();
       setState(res);
     } catch (error) {
       console.error("Failed to fetch settings:", error);

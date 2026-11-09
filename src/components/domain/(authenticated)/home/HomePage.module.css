@@ -76,6 +76,207 @@
   }
 }
 
+/* ===== 最初のメッセージ送信後のストリーミング表示 ===== */
+.streaming {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface-raised);
+  box-shadow: var(--elevation-1);
+  animation: eda-fade-in var(--transition-base);
+}
+
+/* 生成中のラベル */
+.streamingEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.streamingIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+/* ユーザー発言の吹き出し（チャット画面のトーンに合わせる） */
+.userRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.userBubble {
+  max-width: min(80%, 560px);
+  padding: 10px var(--space-2);
+  border-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background-sub);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* AI 応答本文 */
+.assistantRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: calc(var(--line-height-body) * 1em);
+}
+
+/* 文字入力中のカーソル */
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.05em;
+  flex-shrink: 0;
+  border-radius: 1px;
+  background-color: var(--color-primary);
+  box-shadow: 0 0 6px var(--color-primary-glow);
+  animation: eda-streaming-cursor 1s steps(2, start) infinite;
+}
+
+@keyframes eda-streaming-cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* ===== Markdown レンダリングの基本スタイル（チャット画面と同一トーン） ===== */
+.markdown {
+  flex: 1;
+  min-width: 0;
+  line-height: var(--line-height-body);
+  overflow-wrap: anywhere;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: var(--space-2) 0 var(--space-1);
+  line-height: var(--line-height-tight);
+  font-weight: 700;
+}
+
+.markdown h1 {
+  font-size: var(--font-size-heading);
+}
+
+.markdown h2 {
+  font-size: var(--font-size-md);
+}
+
+.markdown h3 {
+  font-size: var(--font-size-body);
+}
+
+.markdown p {
+  margin: var(--space-1) 0;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: var(--space-1) 0;
+  padding-left: var(--space-3);
+}
+
+.markdown ul {
+  list-style: disc;
+}
+
+.markdown ol {
+  list-style: decimal;
+}
+
+.markdown li {
+  margin: 2px 0;
+}
+
+.markdown pre {
+  margin: var(--space-1) 0;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-background-sub);
+  overflow-x: auto;
+  font-size: var(--font-size-caption);
+  line-height: 1.6;
+}
+
+.markdown code {
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-background-sub);
+  font-size: 0.9em;
+}
+
+.markdown pre code {
+  padding: 0;
+  background: none;
+}
+
+.markdown blockquote {
+  margin: var(--space-1) 0;
+  padding-left: var(--space-2);
+  border-left: 3px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.markdown table {
+  margin: var(--space-1) 0;
+  border-collapse: collapse;
+}
+
+.markdown th,
+.markdown td {
+  padding: 4px var(--space-1);
+  border: 1px solid var(--color-border);
+}
+
+.markdown th {
+  background-color: var(--color-background-sub);
+}
+
+.markdown a {
+  word-break: break-all;
+}
+
+.markdown hr {
+  margin: var(--space-2) 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
 @media (max-width: 767px) {
   /* モバイルでは上部のメニューボタンと重ならないよう余白を確保する */
   .hero {

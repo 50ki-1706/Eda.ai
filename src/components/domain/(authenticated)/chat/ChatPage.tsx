@@ -4,7 +4,7 @@ import MessageInputBar from "@/components/common/MessageInputBar";
 import Toast from "@/components/common/Toast";
 import { useUserSettings } from "@/hooks/common/useModelPicker";
 import { useMessageInput } from "@/hooks/domain/chat/useMessageInput";
-import { apiClient } from "@/lib/trpc";
+import { client } from "@/lib/orpc/client";
 import type { Message } from "@/types";
 import { GitBranch, Network } from "lucide-react";
 import Link from "next/link";
@@ -33,6 +33,8 @@ const ChatPage = () => {
     toast,
     setToast,
     messages: newMessages,
+    streamingText,
+    streamingPrompt,
     ...messageInput
   } = useMessageInput(
     chatId,
@@ -56,7 +58,7 @@ const ChatPage = () => {
     const fetchMessages = async () => {
       if (branchId) {
         try {
-          const res = await apiClient.chat.branch.getMessages.query({
+          const res = await client.chat.branch.getMessages({
             branchId,
           });
           setMessages(res);
@@ -70,10 +72,11 @@ const ChatPage = () => {
   }, [branchId]);
 
   // 最新メッセージが変わったら（取得・送信時）、チャットリストをスクロールする
+  // ストリーミング中は本文が伸び続けるため、差分の到着ごとに末尾へ追従させる
   useEffect(() => {
-    if (!latestMessageId) return;
+    if (!latestMessageId && !streamingText) return;
     chatListRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [latestMessageId]);
+  }, [latestMessageId, streamingText]);
 
   const handleCreateBranch = async (messageId: string) => {
     const targetMessage = messages.find((m) => m.id === messageId);
@@ -89,7 +92,7 @@ const ChatPage = () => {
         targetMessage.promptText.substring(0, 50) +
         (targetMessage.promptText.length > 50 ? "..." : "");
 
-      const res = await apiClient.chat.branch.new.mutate({
+      const res = await client.chat.branch.new({
         summary,
         parentBranchId: branchId,
         chatId: chatId,
@@ -134,6 +137,8 @@ const ChatPage = () => {
       <div className={styles.transcript}>
         <ChatMessageList
           messages={newMessages}
+          streamingText={streamingText}
+          streamingPrompt={streamingPrompt}
           onCreateBranch={handleCreateBranch}
           chatListRef={chatListRef}
         />

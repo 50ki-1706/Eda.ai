@@ -15,6 +15,8 @@ interface MessageInputBaseReturn {
   onPicked: (e: ChangeEvent<HTMLInputElement>) => void;
   clearFile: () => void;
   setToast: (message: string | null) => void;
+  /** ストリーミング中に送信したユーザーのプロンプト（確定前の吹き出し表示用） */
+  streamingPrompt: string;
 }
 
 export function useMessageInputBase(
@@ -27,6 +29,8 @@ export function useMessageInputBase(
   const [sending, setSending] = useState(false);
   const [files, setFiles] = useState<File[] | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // 送信直後に確定前のユーザー発言を表示するため、送信内容を保持しておく
+  const [streamingPrompt, setStreamingPrompt] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleEncodedFiles = async (
@@ -55,6 +59,8 @@ export function useMessageInputBase(
     }
     try {
       setSending(true);
+      // 入力欄をクリアしても確定前の吹き出しを出せるよう、送信内容を控えておく
+      setStreamingPrompt(payload);
       const { promptText, promptFiles } = await makeInput(
         text,
         files,
@@ -69,6 +75,7 @@ export function useMessageInputBase(
       setToast(error instanceof Error ? error.message : "送信に失敗しました");
     } finally {
       setSending(false);
+      setStreamingPrompt("");
     }
   };
 
@@ -101,5 +108,6 @@ export function useMessageInputBase(
     onPicked,
     clearFile,
     setToast,
+    streamingPrompt,
   };
 }

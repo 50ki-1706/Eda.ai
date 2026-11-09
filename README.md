@@ -80,7 +80,7 @@ pnpm format
 
 ### アーキテクチャ・データ構造
 - [データベース設計 (database.md)](./docs/database.md) - Eda.aiのER図、各テーブルの役割、自己参照（ブランチ・メッセージ）の解説
-- [APIドキュメント (APIDOC.md)](./docs/APIDOC.md) - サーバー連携（tRPCやServer Actions）のエンドポイントやデータインターフェース仕様
+- [APIドキュメント (APIDOC.md)](./docs/APIDOC.md) - サーバー連携（oRPC + valibot）のエンドポイント、ストリーミング仕様、OpenAPI/Swagger UI の使い方
 
 ### 画面・UI・デザイン
 - [画面遷移設計 (page-transition.md)](./docs/page-transition.md) - アプリケーション全体の画面フローとルーティング構造
@@ -91,3 +91,4 @@ pnpm format
 - [制作背景(decision/production_background.md)](./docs/decision/production_background.md) - 制作背景の説明
 - [バックエンド設計 (decision/backend_design.md)](./docs/decision/backend_design.md) - バックエンドアーキテクチャの選定理由や全体構成
 - [技術選定 (decision/technology_selection.md)](./docs/decision/technology_selection.md) - プロジェクトで採用した主要技術（Next.js, Prisma, Better Authなど）の選定基準と理由
+- [oRPC + valibot への移行 (decision/orpc_valibot_migration.md)](./docs/decision/orpc_valibot_migration.md) - tRPC + zod から oRPC + valibot へ移行した背景・理由・影響

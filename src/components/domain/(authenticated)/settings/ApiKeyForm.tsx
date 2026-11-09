@@ -1,7 +1,7 @@
 "use client";
 
 import type { ProviderStatus } from "@/app/api/(Contoller)/settings";
-import { apiClient } from "@/lib/trpc";
+import { client } from "@/lib/orpc/client";
 import { Check, ExternalLink, Trash2 } from "lucide-react";
 import { useState } from "react";
 import styles from "./ApiKeyForm.module.css";
@@ -33,7 +33,7 @@ export default function ApiKeyForm({
     }
     setBusy(true);
     try {
-      await apiClient.settings.saveApiKey.mutate({
+      await client.settings.saveApiKey({
         provider: provider.provider,
         apiKey,
       });
@@ -52,7 +52,7 @@ export default function ApiKeyForm({
   const handleDelete = async () => {
     setBusy(true);
     try {
-      await apiClient.settings.deleteApiKey.mutate({
+      await client.settings.deleteApiKey({
         provider: provider.provider,
       });
       await onSaved(`${provider.label} の API キーを削除しました`);

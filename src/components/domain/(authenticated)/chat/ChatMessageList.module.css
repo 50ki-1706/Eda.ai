@@ -119,6 +119,36 @@
   color: var(--color-text-secondary);
 }
 
+/* ===== ストリーミング表示（確定前の応答） ===== */
+/* 本文が届くまでの行の高さを確保するプレースホルダー */
+.streamingPlaceholder {
+  height: calc(var(--line-height-body) * 1em);
+}
+
+/* 文字入力中のカーソル。Primary の発光で「生成中」を表す */
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  background-color: var(--color-primary);
+  box-shadow: 0 0 6px var(--color-primary-glow);
+  animation: eda-streaming-cursor 1s steps(2, start) infinite;
+}
+
+@keyframes eda-streaming-cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.15;
+  }
+}
+
 .scrollAnchor {
   height: 1px;
 }

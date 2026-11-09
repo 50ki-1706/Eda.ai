@@ -6,7 +6,7 @@ import {
   providerMeta,
 } from "@/constants/models";
 import { createKeyHint, decryptApiKey, encryptApiKey } from "@/lib/crypto";
-import { TRPCError } from "@trpc/server";
+import { ORPCError } from "@orpc/server";
 import {
   type CatalogModel,
   getAllCatalogModels,
@@ -52,12 +52,11 @@ export interface SettingsState {
 export class SettingsController {
   /**
    * プロバイダー名が有効か検証する
-   * @throws TRPCError 未対応のプロバイダーの場合
+   * @throws ORPCError 未対応のプロバイダーの場合
    */
   private assertProvider = (provider: string): ApiKeyProvider => {
     if (!(apiKeyProviders as readonly string[]).includes(provider)) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
+      throw new ORPCError("BAD_REQUEST", {
         message: `未対応のプロバイダーです: ${provider}`,
       });
     }
@@ -161,8 +160,7 @@ export class SettingsController {
     const apiKey = input.apiKey.trim();
 
     if (apiKey.length < 8) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
+      throw new ORPCError("BAD_REQUEST", {
         message: "API キーが短すぎます。正しいキーを入力してください。",
       });
     }
@@ -197,15 +195,13 @@ export class SettingsController {
     const validProvider = this.assertProvider(provider);
 
     if (!modelId) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
+      throw new ORPCError("BAD_REQUEST", {
         message: `モデル ID の形式が不正です: ${input.modelId}`,
       });
     }
 
     if (!(await isKnownModel(validProvider, modelId))) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
+      throw new ORPCError("BAD_REQUEST", {
         message: `このモデルは現在利用できません: ${input.modelId}`,
       });
     }
@@ -221,7 +217,7 @@ export class SettingsController {
    *
    * @param userId - 対象ユーザーの ID
    * @param modelId - 使用するモデル ID（未指定なら保存済み設定 → 既定モデル）
-   * @throws TRPCError モデル未登録、または API キー未登録の場合
+   * @throws ORPCError モデル未登録、または API キー未登録の場合
    */
   resolveLLMProvider = async (
     userId: string,
@@ -235,8 +231,7 @@ export class SettingsController {
     const validProvider = this.assertProvider(provider);
 
     if (!rawModelId) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
+      throw new ORPCError("BAD_REQUEST", {
         message: `モデル ID の形式が不正です: ${targetId}`,
       });
     }
@@ -246,8 +241,7 @@ export class SettingsController {
     const option = catalog.find((model) => model.modelId === rawModelId);
 
     if (!option) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
+      throw new ORPCError("BAD_REQUEST", {
         message:
           catalog.length === 0
             ? `${providerMeta[validProvider].label} のモデル一覧を取得できませんでした。時間をおいて再試行してください。`
@@ -261,8 +255,7 @@ export class SettingsController {
     );
 
     if (!encryptedKey) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
+      throw new ORPCError("PRECONDITION_FAILED", {
         message: `${providerMeta[validProvider].label} の API キーが未登録です。設定画面から API キーを登録してください。`,
       });
     }

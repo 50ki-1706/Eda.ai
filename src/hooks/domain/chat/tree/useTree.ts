@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/trpc";
+import { client } from "@/lib/orpc/client";
 import type { RawNodeDatum } from "@/types/tree";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,7 +15,7 @@ function useTree() {
     (async () => {
       try {
         // Sidebar から渡される chatId は chat テーブルのものなので chat ルーターを利用する
-        const res = await apiClient.chat.branch.structure.query({
+        const res = await client.chat.branch.structure({
           chatId: params.id as string,
         });
         setBranchStructure(res);
@@ -34,11 +34,11 @@ function useTree() {
   const handleBranchMerge = async (branchId: string) => {
     const chatId: string = params.id as string;
     if (branchId) {
-      await apiClient.chat.branch.merge.mutate({
+      await client.chat.branch.merge({
         branchId: branchId,
       });
 
-      const res = await apiClient.chat.branch.structure.query({
+      const res = await client.chat.branch.structure({
         chatId: chatId,
       });
 

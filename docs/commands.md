@@ -43,6 +43,27 @@ ORMには **Prisma** ではなく **reylo** を使用しています。
 | `pnpm lint` | BiomeによるLintチェックのみを実行します。 |
 | `pnpm typecheck` | 型チェックを実行します（`next typegen` 後に `tsc --noEmit --runExternalCode`）。`.sql` クエリの型は reylo がライブDBから推論します。 |
 
+## API ドキュメント（OpenAPI / Swagger UI）
+
+API は oRPC のコントラクト（`src/lib/orpc/contract.ts`）から OpenAPI 3.1.1 仕様を自動生成しています。
+`pnpm dev` で開発サーバーを起動した状態で、以下を確認できます。
+
+| URL | 内容 |
+| :--- | :--- |
+| `http://localhost:3000/api/openapi` | Swagger UI（ブラウザで閲覧・実行） |
+| `http://localhost:3000/api/openapi/spec.json` | OpenAPI 仕様 JSON |
+| `http://localhost:3000/api/rpc` | oRPC クライアント用の型安全 RPC エンドポイント |
+
+```bash
+# 開発サーバー起動後
+open http://localhost:3000/api/openapi        # Swagger UI
+curl http://localhost:3000/api/openapi/spec.json  # OpenAPI 仕様 JSON
+```
+
+- Swagger UI の「Try it out」でリクエストを送る場合は、ブラウザの Cookie によるログイン済みセッションが必要です。
+- 仕様の `path` はそのまま REST として呼び出せます（例: `curl http://localhost:3000/api/openapi/chats`）。
+- エンドポイントを追加・変更した場合は `src/lib/orpc/contract.ts` を編集すれば、仕様は自動的に更新されます（手動でのドキュメント修正は不要）。
+
 ## ビルド・本番環境向け
 
 | コマンド | 説明 |
