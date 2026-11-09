@@ -1,6 +1,7 @@
 "use client";
 import { useSidebar } from "@/hooks/common/useSidebar";
-import { ChevronLeft, Menu, Plus } from "lucide-react";
+import { ChevronLeft, Menu, Plus, Settings } from "lucide-react";
+import Link from "next/link";
 import styles from "./Sidebar.module.css";
 
 const Sidebar = () => {
@@ -57,6 +58,12 @@ const Sidebar = () => {
                 </li>
               ))}
             </ul>
+            <div className={styles.footer}>
+              <Link href="/settings" className={styles.footerLink}>
+                <Settings size={16} aria-hidden="true" />
+                設定
+              </Link>
+            </div>
           </aside>
         </>
       )}

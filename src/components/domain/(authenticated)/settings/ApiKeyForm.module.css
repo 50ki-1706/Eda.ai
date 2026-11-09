@@ -1,0 +1,136 @@
+/* API キー登録カード */
+.card {
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-background-main);
+  box-shadow: var(--elevation-1);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+
+.providerName {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.badgeRegistered,
+.badgeUnregistered {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-1);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-caption);
+}
+
+.badgeRegistered {
+  background-color: rgb(0 183 255 / 0.12);
+  color: var(--color-primary);
+}
+
+.badgeUnregistered {
+  background-color: var(--color-background-sub);
+  color: var(--color-text-secondary);
+}
+
+.description {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.hint {
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.hint code {
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-background-sub);
+  color: var(--color-text-main);
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-background-main);
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.saveButton {
+  height: 40px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+}
+
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+}
+
+.deleteButton:hover:not(:disabled) {
+  background-color: rgb(255 75 75 / 0.08);
+}
+
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.consoleLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-caption);
+}
+
+/* スクリーンリーダー専用ラベル */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

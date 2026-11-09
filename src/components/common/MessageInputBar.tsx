@@ -1,7 +1,10 @@
+import type { CatalogModel } from "@/app/api/(LLM)/catalog";
+import type { ApiKeyProvider } from "@/constants/models";
 import { sendKeyMapping } from "@/utils/keyMapping";
 import { Paperclip, Send, X } from "lucide-react";
 import type { ChangeEvent, RefObject } from "react";
 import styles from "./MessageInputBar.module.css";
+import ModelPicker from "./ModelPicker";
 
 interface MessageInputBarProps {
   text: string;
@@ -13,6 +16,14 @@ interface MessageInputBarProps {
   openPicker: () => void;
   onPicked: (e: ChangeEvent<HTMLInputElement>) => void;
   clearFile: () => void;
+  /** 選択中のモデル ID */
+  modelId: string;
+  /** モデル変更ハンドラー */
+  onModelChange: (modelId: string) => void;
+  /** プロバイダーごとの API キー登録状況 */
+  modelAvailability: Array<{ provider: ApiKeyProvider; registered: boolean }>;
+  /** プロバイダーから取得した最新のモデル一覧 */
+  models: CatalogModel[];
   /** 外側のレイアウト調整用クラス */
   className?: string;
 }
@@ -27,10 +38,22 @@ export default function MessageInputBar({
   openPicker,
   onPicked,
   clearFile,
+  modelId,
+  onModelChange,
+  modelAvailability,
+  models,
   className,
 }: MessageInputBarProps) {
   return (
     <div className={`${styles.wrapper} ${className ?? ""}`.trim()}>
+      <div className={styles.metaRow}>
+        <ModelPicker
+          modelId={modelId}
+          onModelChange={onModelChange}
+          availability={modelAvailability}
+          models={models}
+        />
+      </div>
       {files && files.length > 0 && (
         <div className={styles.fileRow}>
           <span className={styles.fileChip} title={files[0].name}>

@@ -79,6 +79,27 @@ create table if not exists message (
   created_at timestamptz not null default now()
 );
 
+-- ユーザーが登録した LLM プロバイダーの API キー
+-- キー本体は AES-256-GCM で暗号化して保存する（平文は保存しない）
+-- provider は 'openrouter' | 'opencode' | 'google' のいずれか
+create table if not exists user_api_key (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references "user" (id) on delete cascade,
+  provider text not null,
+  encrypted_key text not null,
+  key_hint text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, provider)
+);
+
+-- ユーザーごとの設定（現在選択中のモデル）
+create table if not exists user_setting (
+  user_id text primary key references "user" (id) on delete cascade,
+  model_id text not null,
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists on chat (user_id);
 create index if not exists on branch (chat_id);
 create index if not exists on message (branch_id);

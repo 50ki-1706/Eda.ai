@@ -16,12 +16,13 @@
     "prepare": "lefthook install"
   },
   "dependencies": {
+    "@ai-sdk/gateway": "^4.0.139",
+    "@ai-sdk/openai-compatible": "^3.0.87",
     "@better-auth/kysely-adapter": "^1.7.18",
-    "@google/genai": "^1.13.0",
-    "@openrouter/ai-sdk-provider": "^2.2.3",
+    "@openrouter/ai-sdk-provider": "^3.1.0",
     "@trpc/client": "^11.4.4",
     "@trpc/server": "^11.4.4",
-    "ai": "^6.0.86",
+    "ai": "^7.0.166",
     "better-auth": "^1.7.18",
     "formidable": "^3.5.3",
     "kysely": "^0.29.8",

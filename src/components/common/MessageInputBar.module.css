@@ -3,6 +3,14 @@
   width: 100%;
 }
 
+/* 入力バーの上に置く補助行（モデルピッカーなど） */
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+
 .fileRow {
   display: flex;
   align-items: center;

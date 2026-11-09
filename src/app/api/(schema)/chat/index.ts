@@ -8,7 +8,8 @@ export const createChatInputSchema = z.object({
       mimeType: z.string(),
     })
     .optional(),
-  provider: z.enum(["gemini", "openrouter"]),
+  /** 使用するモデルの ID（`<provider>:<modelId>`）。未指定ならユーザー設定を使う */
+  modelId: z.string().optional(),
 });
 
 export const sendMessageInputSchema = z.object({
@@ -21,7 +22,8 @@ export const sendMessageInputSchema = z.object({
     .optional(),
   branchId: z.string().uuid(),
   latestMessageId: z.string().uuid(),
-  provider: z.enum(["gemini", "openrouter"]),
+  /** 使用するモデルの ID（`<provider>:<modelId>`）。未指定ならユーザー設定を使う */
+  modelId: z.string().optional(),
 });
 
 export const getMessageInputSchema = z.object({

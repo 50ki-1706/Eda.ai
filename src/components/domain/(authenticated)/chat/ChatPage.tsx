@@ -2,6 +2,7 @@
 import MessageInputBar from "@/components/common/MessageInputBar";
 import Sidebar from "@/components/common/Sidebar";
 import Toast from "@/components/common/Toast";
+import { useUserSettings } from "@/hooks/common/useModelPicker";
 import { useMessageInput } from "@/hooks/domain/chat/useMessageInput";
 import { apiClient } from "@/lib/trpc";
 import type { Message } from "@/types";
@@ -21,6 +22,9 @@ const ChatPage = () => {
 
   const [messages, setMessages] = useState<Message[]>([]);
 
+  // ユーザー設定（選択中モデル・API キー登録状況）
+  const { modelId, availability, models, persistModel } = useUserSettings();
+
   const latestMessageId = useMemo(() => {
     return messages.length > 0 ? messages[messages.length - 1].id : null;
   }, [messages]);
@@ -30,7 +34,23 @@ const ChatPage = () => {
     setToast,
     messages: newMessages,
     ...messageInput
-  } = useMessageInput(chatId, branchId, latestMessageId, messages, setMessages);
+  } = useMessageInput(
+    chatId,
+    branchId,
+    latestMessageId,
+    messages,
+    setMessages,
+    modelId,
+  );
+
+  const handleModelChange = async (nextModelId: string) => {
+    try {
+      await persistModel(nextModelId);
+    } catch (error) {
+      console.error("Failed to save model:", error);
+      setToast("モデルの保存に失敗しました");
+    }
+  };
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -98,7 +118,14 @@ const ChatPage = () => {
           />
           <div className={styles.inputArea}>
             <div className={styles.inputRow}>
-              <MessageInputBar {...messageInput} className={styles.inputBar} />
+              <MessageInputBar
+                {...messageInput}
+                modelId={modelId}
+                onModelChange={handleModelChange}
+                modelAvailability={availability}
+                models={models}
+                className={styles.inputBar}
+              />
               <Link
                 href="/chat/[id]/branch/tree"
                 as={`/chat/${chatId}/tree`}

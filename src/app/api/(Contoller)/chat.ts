@@ -1,7 +1,6 @@
 import type { Branch } from "@/types";
 import type { RawNodeDatum } from "@/types/tree";
 import { TRPCError } from "@trpc/server";
-import { getLLMProvider } from "../(LLM)/provider";
 import { ChatRepository } from "../(Repository)/chat";
 import type {
   BranchStructureInput,
@@ -10,19 +9,25 @@ import type {
   SendMessageInput,
   UpdateChatIsPinnedInput,
 } from "../(schema)/chat";
+import { SettingsController } from "./settings";
 
 const chatRepository = new ChatRepository();
+const settingsController = new SettingsController();
 
 export class ChatController {
   /**
    * 新規チャットを作成する
    * LLM にプロンプトを送信してレスポンスと要約を生成し、Chat・Branch・Message を一括で永続化する
-   * @param input - ユーザーのプロンプト情報（テキスト・添付ファイル・プロバイダー）
+   * @param input - ユーザーのプロンプト情報（テキスト・添付ファイル・モデル ID）
    * @param userId - チャットを作成するユーザーの ID
    * @returns 作成された Chat, Branch, Message のオブジェクト
    */
   create = async (input: CreateChatInput, userId: string) => {
-    const llm = getLLMProvider(input.provider);
+    // ユーザーが登録した API キーと選択中モデルからプロバイダーを組み立てる
+    const { llm } = await settingsController.resolveLLMProvider(
+      userId,
+      input.modelId,
+    );
 
     // ユーザーのプロンプトに対する LLM のレスポンスを取得
     const resFromLLM = await llm.generateContent(undefined, {
@@ -45,11 +50,15 @@ export class ChatController {
   /**
    * 既存チャットにメッセージを送信する
    * 過去の会話履歴を LLM に渡してコンテキストを維持したレスポンスを生成する
-   * @param input - メッセージ情報（プロンプト・ブランチ ID・直前メッセージ ID・プロバイダー）
+   * @param input - メッセージ情報（プロンプト・ブランチ ID・直前メッセージ ID・モデル ID）
+   * @param userId - 送信するユーザーの ID（API キーの解決に使用）
    * @returns 作成されたユーザーメッセージと AI レスポンスを含む Message
    */
-  sendMessage = async (input: SendMessageInput) => {
-    const llm = getLLMProvider(input.provider);
+  sendMessage = async (input: SendMessageInput, userId: string) => {
+    const { llm } = await settingsController.resolveLLMProvider(
+      userId,
+      input.modelId,
+    );
 
     // 直前メッセージから親チェーンを辿って会話履歴を取得
     const history = await chatRepository.getMessageChain(input.latestMessageId);

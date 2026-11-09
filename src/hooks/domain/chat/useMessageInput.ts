@@ -8,6 +8,7 @@ export function useMessageInput(
   latestMessageId: string | null,
   messages: Message[],
   setMessages: (messages: Message[]) => void,
+  modelId: string,
 ) {
   const { onSend, ...rest } = useMessageInputBase(
     async (promptText, promptFile) => {
@@ -20,7 +21,7 @@ export function useMessageInput(
         promptFile,
         branchId: branchId as string,
         latestMessageId,
-        provider: "openrouter",
+        modelId,
       });
       setMessages([...messages, res]);
       await new Promise((r) => setTimeout(r, 450));

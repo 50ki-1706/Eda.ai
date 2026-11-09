@@ -2,7 +2,7 @@ import { useMessageInputBase } from "@/hooks/common/useMessageInputBase";
 import { apiClient } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
 
-export function useFirstMessageInput() {
+export function useFirstMessageInput(modelId: string) {
   const router = useRouter();
 
   const { onSend, ...rest } = useMessageInputBase(
@@ -10,7 +10,7 @@ export function useFirstMessageInput() {
       const res = await apiClient.chat.new.mutate({
         promptText,
         promptFile,
-        provider: "openrouter",
+        modelId,
       });
       router.push(`/chat/${res.chat.id}/branch/${res.branch.id}`);
     },
