@@ -3,7 +3,7 @@
 import AppShell from "@/components/common/AppShell";
 import MessageInputBar from "@/components/common/MessageInputBar";
 import Toast from "@/components/common/Toast";
-import { useUserSettings } from "@/hooks/common/useModelPicker";
+import { useUserSettings } from "@/hooks/common/useUserSettings";
 import { useFirstMessageInput } from "@/hooks/domain/home/useFirstMessageInput";
 import {
   GitBranch,

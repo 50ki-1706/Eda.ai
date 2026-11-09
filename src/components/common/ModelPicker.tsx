@@ -1,8 +1,8 @@
 "use client";
 
-import type { CatalogModel } from "@/app/api/(LLM)/catalog";
 import type { ApiKeyProvider } from "@/constants/models";
 import { useModelPicker } from "@/hooks/common/useModelPicker";
+import type { CatalogModel } from "@/types";
 import { Check, ChevronDown, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";

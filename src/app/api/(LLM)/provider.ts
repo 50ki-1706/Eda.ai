@@ -1,6 +1,5 @@
-import type { Message } from "@/types";
+import type { CatalogModel, Message } from "@/types";
 import { generateText, streamText } from "ai";
-import type { CatalogModel } from "./catalog";
 import { resolveLanguageModel } from "./resolveModel";
 import {
   type MessageContent,
@@ -12,12 +11,6 @@ import {
 
 /** LLM 呼び出しの共通インターフェース */
 export interface LLMProvider {
-  /** メッセージ履歴を元にコンテンツを生成する */
-  generateContent(
-    history: Message[] | undefined,
-    messageContent: MessageContent,
-  ): Promise<string>;
-
   /**
    * メッセージ履歴を元にコンテンツをストリーミング生成する（テキスト差分を逐次返す）
    *
@@ -46,20 +39,6 @@ export const createLLMProvider = (
   credentials: ModelCredentials,
 ): LLMProvider => {
   const resolved = resolveLanguageModel(option, credentials);
-
-  const generate = async (
-    history: Message[] | undefined,
-    messageContent: MessageContent,
-  ): Promise<string> => {
-    const { text } = await generateText({
-      model: resolved.model,
-      system: systemPrompt,
-      messages: buildMessages(history, messageContent),
-      providerOptions: resolved.providerOptions,
-    });
-
-    return text;
-  };
 
   // ストリーミング生成。差分を yield し、最後に全文を return する
   const stream = async function* (
@@ -102,13 +81,20 @@ export const createLLMProvider = (
   };
 
   return {
-    generateContent: generate,
-
     streamContent: stream,
 
+    /** 要約は逐次表示しないため、非ストリーミングで全文を取得する */
     generateSummary: async (inputText: string, aiResponse: string) => {
-      const prompt = buildSummaryPrompt(inputText, aiResponse);
-      return await generate(undefined, { text: prompt });
+      const { text } = await generateText({
+        model: resolved.model,
+        system: systemPrompt,
+        messages: buildMessages(undefined, {
+          text: buildSummaryPrompt(inputText, aiResponse),
+        }),
+        providerOptions: resolved.providerOptions,
+      });
+
+      return text;
     },
   };
 };

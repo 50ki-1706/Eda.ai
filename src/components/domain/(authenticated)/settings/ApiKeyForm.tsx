@@ -1,7 +1,7 @@
 "use client";
 
-import type { ProviderStatus } from "@/app/api/(Contoller)/settings";
 import { client } from "@/lib/orpc/client";
+import type { ProviderStatus } from "@/types";
 import { Check, ExternalLink, Trash2 } from "lucide-react";
 import { useState } from "react";
 import styles from "./ApiKeyForm.module.css";

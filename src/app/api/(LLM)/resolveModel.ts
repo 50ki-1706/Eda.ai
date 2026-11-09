@@ -1,7 +1,7 @@
+import type { CatalogModel } from "@/types";
 import { createGateway } from "@ai-sdk/gateway";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import type { CatalogModel } from "./catalog";
 import type { ModelCredentials, ResolvedModel } from "./types";
 
 /**

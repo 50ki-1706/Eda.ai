@@ -2,7 +2,7 @@
 import AppShell from "@/components/common/AppShell";
 import MessageInputBar from "@/components/common/MessageInputBar";
 import Toast from "@/components/common/Toast";
-import { useUserSettings } from "@/hooks/common/useModelPicker";
+import { useUserSettings } from "@/hooks/common/useUserSettings";
 import { useMessageInput } from "@/hooks/domain/chat/useMessageInput";
 import { client } from "@/lib/orpc/client";
 import type { Message } from "@/types";
@@ -29,21 +29,8 @@ const ChatPage = () => {
     return messages.length > 0 ? messages[messages.length - 1].id : null;
   }, [messages]);
 
-  const {
-    toast,
-    setToast,
-    messages: newMessages,
-    streamingText,
-    streamingPrompt,
-    ...messageInput
-  } = useMessageInput(
-    chatId,
-    branchId,
-    latestMessageId,
-    messages,
-    setMessages,
-    modelId,
-  );
+  const { toast, setToast, streamingText, streamingPrompt, ...messageInput } =
+    useMessageInput(branchId, latestMessageId, setMessages, modelId);
 
   const handleModelChange = async (nextModelId: string) => {
     try {
@@ -54,21 +41,24 @@ const ChatPage = () => {
     }
   };
 
+  // ブランチが切り替わったら、そのブランチのメッセージを読み直す
   useEffect(() => {
+    if (!branchId) return;
+
+    let cancelled = false;
     const fetchMessages = async () => {
-      if (branchId) {
-        try {
-          const res = await client.chat.branch.getMessages({
-            branchId,
-          });
-          setMessages(res);
-        } catch (error) {
-          console.error("Failed to fetch messages:", error);
-        }
+      try {
+        const res = await client.chat.branch.getMessages({ branchId });
+        if (!cancelled) setMessages(res);
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
       }
     };
 
     fetchMessages();
+    return () => {
+      cancelled = true;
+    };
   }, [branchId]);
 
   // 最新メッセージが変わったら（取得・送信時）、チャットリストをスクロールする
@@ -88,6 +78,7 @@ const ChatPage = () => {
     }
 
     try {
+      // ブランチ名には分岐元メッセージの冒頭を使う
       const summary =
         targetMessage.promptText.substring(0, 50) +
         (targetMessage.promptText.length > 50 ? "..." : "");
@@ -95,8 +86,8 @@ const ChatPage = () => {
       const res = await client.chat.branch.new({
         summary,
         parentBranchId: branchId,
-        chatId: chatId,
-        messageId: messageId,
+        chatId,
+        messageId,
         promptText: targetMessage.promptText,
         response: targetMessage.response,
       });
@@ -119,7 +110,7 @@ const ChatPage = () => {
             </span>
             <h1 className={styles.headerTitle}>チャット</h1>
             <span className={styles.headerMeta}>
-              {newMessages.length} 件のメッセージ
+              {messages.length} 件のメッセージ
             </span>
           </div>
           <Link
@@ -136,7 +127,7 @@ const ChatPage = () => {
 
       <div className={styles.transcript}>
         <ChatMessageList
-          messages={newMessages}
+          messages={messages}
           streamingText={streamingText}
           streamingPrompt={streamingPrompt}
           onCreateBranch={handleCreateBranch}

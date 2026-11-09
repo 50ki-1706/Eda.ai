@@ -1,9 +1,9 @@
 "use client";
 
-import type { SettingsState } from "@/app/api/(Contoller)/settings";
 import AppShell from "@/components/common/AppShell";
 import Toast from "@/components/common/Toast";
 import { client } from "@/lib/orpc/client";
+import type { SettingsState } from "@/types";
 import { KeyRound, Palette, Settings2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ApiKeyForm from "./ApiKeyForm";

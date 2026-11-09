@@ -2,7 +2,7 @@
 import AppShell from "@/components/common/AppShell";
 import Toast from "@/components/common/Toast";
 import StoryTree from "@/components/domain/(authenticated)/tree/StoryTree";
-import useTree from "@/hooks/domain/chat/tree/useTree";
+import { useTree } from "@/hooks/domain/chat/tree/useTree";
 import { GitMerge, MessageSquare, Network } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -14,34 +14,32 @@ import styles from "./page.module.css";
  */
 export default function Page() {
   const {
-    handleBranchMerge,
-    handleBranchNavigation,
-    handleClick,
-    isChecked,
-    setIsChecked,
+    chatId,
     branchStructure,
     loading,
-    chatId,
+    mergeMode,
+    setMergeMode,
+    handleNodeClick,
   } = useTree();
   const [toast, setToast] = useState<string | null>(null);
 
   // ルートブランチの ID（会話画面へ戻る先）
-  const rootBranchId = branchStructure?.attributes?.id ?? "";
+  const rootBranchId = branchStructure?.attributes.id ?? "";
 
-  const handleNodeClick = async (branchId: string) => {
+  const onNodeClick = async (branchId: string) => {
     try {
-      await handleClick(branchId, handleBranchMerge, handleBranchNavigation);
+      await handleNodeClick(branchId);
     } catch (error) {
       console.error("Failed to handle branch click:", error);
       setToast(
-        isChecked ? "ブランチのマージに失敗しました" : "画面遷移に失敗しました",
+        mergeMode ? "ブランチのマージに失敗しました" : "画面遷移に失敗しました",
       );
     }
   };
 
   return (
     <AppShell>
-      <div className={styles.layout} data-merge-mode={isChecked || undefined}>
+      <div className={styles.layout} data-merge-mode={mergeMode || undefined}>
         <header className={styles.header}>
           <div className={styles.headerText}>
             <span className={styles.headerIcon} aria-hidden="true">
@@ -70,8 +68,8 @@ export default function Page() {
               <input
                 type="checkbox"
                 className={styles.switchInput}
-                checked={isChecked}
-                onChange={() => setIsChecked(!isChecked)}
+                checked={mergeMode}
+                onChange={() => setMergeMode(!mergeMode)}
                 aria-label="マージモードを有効にする"
               />
               <span className={styles.switchTrack} aria-hidden="true">
@@ -82,7 +80,7 @@ export default function Page() {
         </header>
 
         {/* output 要素は暗黙的に role="status" を持つため role 属性は不要 */}
-        {isChecked && (
+        {mergeMode && (
           <output className={styles.mergeBanner}>
             マージモード: 統合したいブランチのノードをクリックしてください。
           </output>
@@ -104,7 +102,7 @@ export default function Page() {
             <StoryTree
               data={branchStructure}
               onNodeClick={(branchId) => {
-                void handleNodeClick(branchId);
+                void onNodeClick(branchId);
               }}
             />
           )}

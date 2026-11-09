@@ -42,10 +42,12 @@ dockerを使用します。
 docker compose up -d
 ```
 
-### 5. データベースマイグレーション
+### 5. データベーススキーマの適用
+
+`db/schema.sql` をローカルDBへ適用します（ORM は reylo を使用し、マイグレーション管理は行いません）。
 
 ```bash
-pnpm exec prisma migrate dev
+pnpm db:push
 ```
 
 ### 6. 開発サーバーの起動
@@ -90,5 +92,6 @@ pnpm format
 ### 技術選定・意思決定 (ADR)
 - [制作背景(decision/production_background.md)](./docs/decision/production_background.md) - 制作背景の説明
 - [バックエンド設計 (decision/backend_design.md)](./docs/decision/backend_design.md) - バックエンドアーキテクチャの選定理由や全体構成
-- [技術選定 (decision/technology_selection.md)](./docs/decision/technology_selection.md) - プロジェクトで採用した主要技術（Next.js, Prisma, Better Authなど）の選定基準と理由
+- [技術選定 (decision/technology_selection.md)](./docs/decision/technology_selection.md) - プロジェクトで採用した主要技術（Next.js, reylo, Better Authなど）の選定基準と理由
 - [oRPC + valibot への移行 (decision/orpc_valibot_migration.md)](./docs/decision/orpc_valibot_migration.md) - tRPC + zod から oRPC + valibot へ移行した背景・理由・影響
+- [リビルド後のリファクタリング方針 (decision/refactor_after_rebuild.md)](./docs/decision/refactor_after_rebuild.md) - リビルドで残った型・責務の重複と移行時の名残を整理した方針

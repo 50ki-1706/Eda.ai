@@ -6,9 +6,9 @@ import {
   providerMeta,
 } from "@/constants/models";
 import { createKeyHint, decryptApiKey, encryptApiKey } from "@/lib/crypto";
+import type { CatalogModel, ProviderStatus, SettingsState } from "@/types";
 import { ORPCError } from "@orpc/server";
 import {
-  type CatalogModel,
   getAllCatalogModels,
   getCatalogModels,
   isKnownModel,
@@ -22,32 +22,6 @@ import type {
 } from "../(schema)/settings";
 
 const userSettingsRepository = new UserSettingsRepository();
-
-/** 設定画面に返す、プロバイダーごとの登録状況 */
-export interface ProviderStatus {
-  provider: ApiKeyProvider;
-  label: string;
-  description: string;
-  consoleUrl: string;
-  keyPlaceholder: string;
-  /** キーが登録済みか */
-  registered: boolean;
-  /** 登録済みキーのヒント（未登録なら null） */
-  keyHint: string | null;
-  /** カタログから取得できたモデル数 */
-  modelCount: number;
-}
-
-/** 設定画面に返す全体の状態 */
-export interface SettingsState {
-  providers: ProviderStatus[];
-  /** 各プロバイダーの公開カタログから取得した最新のモデル一覧 */
-  models: CatalogModel[];
-  /** 現在選択中のモデル ID */
-  modelId: string;
-  /** 現在のモデルが利用可能（= 対応プロバイダーのキーが登録済み）か */
-  modelAvailable: boolean;
-}
 
 export class SettingsController {
   /**

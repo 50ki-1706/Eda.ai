@@ -13,6 +13,15 @@ import {
   saveModelInputSchema,
 } from "@/app/api/(schema)/settings";
 import { apiKeyProviders } from "@/constants/models";
+import type {
+  Branch,
+  CatalogModel,
+  Chat,
+  Message,
+  ProviderStatus,
+  SettingsState,
+  TreeNode,
+} from "@/types";
 import { eventIterator, oc } from "@orpc/contract";
 import * as v from "valibot";
 
@@ -33,7 +42,13 @@ import * as v from "valibot";
 /* 出力スキーマ（DB 由来のドメイン型）                                          */
 /* -------------------------------------------------------------------------- */
 
-/** チャット（`src/types/index.ts` の `Chat` と対応） */
+/**
+ * 各スキーマは `satisfies` で `src/types/index.ts` のドメイン型と一致することを検証している。
+ * 型（`src/types`）とスキーマ（ここ）のどちらかを変更した際に、
+ * 不一致があればコンパイルエラーになる。
+ */
+
+/** チャット */
 export const chatSchema = v.object({
   id: v.string(),
   summary: v.string(),
@@ -41,18 +56,18 @@ export const chatSchema = v.object({
   userId: v.string(),
   createdAt: v.string(),
   updatedAt: v.string(),
-});
+}) satisfies v.GenericSchema<Chat>;
 
-/** ブランチ（`src/types/index.ts` の `Branch` と対応） */
+/** ブランチ */
 export const branchSchema = v.object({
   id: v.string(),
   summary: v.string(),
   parentBranchId: v.nullable(v.string()),
   chatId: v.string(),
   createdAt: v.string(),
-});
+}) satisfies v.GenericSchema<Branch>;
 
-/** メッセージ（`src/types/index.ts` の `Message` と対応） */
+/** メッセージ */
 export const messageSchema = v.object({
   id: v.string(),
   promptText: v.string(),
@@ -61,20 +76,14 @@ export const messageSchema = v.object({
   response: v.string(),
   branchId: v.string(),
   createdAt: v.string(),
-});
+}) satisfies v.GenericSchema<Message>;
 
-/** ブランチツリーのノード（`src/types/tree.ts` の `RawNodeDatum` と対応、自己参照） */
-export const treeNodeSchema: v.GenericSchema<{
-  name: string;
-  attributes: { id: string };
-  children: TreeNode[];
-}> = v.object({
+/** ブランチツリーのノード（自己参照） */
+export const treeNodeSchema: v.GenericSchema<TreeNode> = v.object({
   name: v.string(),
   attributes: v.object({ id: v.string() }),
   children: v.array(v.lazy(() => treeNodeSchema)),
 });
-
-export type TreeNode = v.InferOutput<typeof treeNodeSchema>;
 
 /* -------------------------------------------------------------------------- */
 /* 出力スキーマ（設定）                                                          */
@@ -83,7 +92,7 @@ export type TreeNode = v.InferOutput<typeof treeNodeSchema>;
 /** API キーを登録できるプロバイダー（`@/constants/models` と一致） */
 export const apiKeyProviderSchema = v.picklist(apiKeyProviders);
 
-/** カタログ上のモデル（`src/app/api/(LLM)/catalog.ts` の `CatalogModel` と対応） */
+/** カタログ上のモデル */
 export const catalogModelSchema = v.object({
   id: v.string(),
   provider: apiKeyProviderSchema,
@@ -93,9 +102,9 @@ export const catalogModelSchema = v.object({
   isFree: v.boolean(),
   /** コンテキスト長（不明なら undefined） */
   contextLength: v.optional(v.number()),
-});
+}) satisfies v.GenericSchema<CatalogModel>;
 
-/** プロバイダーごとの登録状況（`src/app/api/(Contoller)/settings.ts` の `ProviderStatus` と対応） */
+/** プロバイダーごとの登録状況 */
 export const providerStatusSchema = v.object({
   provider: apiKeyProviderSchema,
   label: v.string(),
@@ -108,9 +117,9 @@ export const providerStatusSchema = v.object({
   keyHint: v.nullable(v.string()),
   /** カタログから取得できたモデル数 */
   modelCount: v.number(),
-});
+}) satisfies v.GenericSchema<ProviderStatus>;
 
-/** 設定画面に返す全体の状態（`SettingsState` と対応） */
+/** 設定画面に返す全体の状態 */
 export const settingsStateSchema = v.object({
   providers: v.array(providerStatusSchema),
   /** 各プロバイダーの公開カタログから取得した最新のモデル一覧 */
@@ -119,12 +128,7 @@ export const settingsStateSchema = v.object({
   modelId: v.string(),
   /** 現在のモデルが利用可能（= 対応プロバイダーのキーが登録済み）か */
   modelAvailable: v.boolean(),
-});
-
-/** 設定系 API の出力型 */
-export type CatalogModel = v.InferOutput<typeof catalogModelSchema>;
-export type ProviderStatus = v.InferOutput<typeof providerStatusSchema>;
-export type SettingsState = v.InferOutput<typeof settingsStateSchema>;
+}) satisfies v.GenericSchema<SettingsState>;
 
 /* -------------------------------------------------------------------------- */
 /* ストリーミングのイベントスキーマ                                              */

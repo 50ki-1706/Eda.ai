@@ -42,7 +42,7 @@ Controller と Repository で責務を分けることで、以下のメリット
 
 **責務**: データベースアクセスの抽象化
 
-- Prisma Client を使用した CRUD 操作のみを行う
+- reylo で `.sql` クエリ（`src/queries/`）を実行する CRUD 操作のみを行う
 - ビジネスロジックを持たない
 - トランザクションや複雑なクエリ（再帰 CTE 等）もこの層に閉じ込める
 
@@ -66,7 +66,7 @@ Next.js App Router の Route Groups（括弧付きディレクトリ）を活用
 
 ```
 src/app/api/
-├── (Controller)/   # ビジネスロジック層
+├── (Contoller)/    # ビジネスロジック層（ディレクトリ名は既存の綴りを維持）
 ├── (Repository)/   # データアクセス層
 ├── (LLM)/          # LLM プロバイダー層
 ├── (schema)/       # バリデーションスキーマ（valibot）

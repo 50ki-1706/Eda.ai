@@ -4,7 +4,7 @@ import { useIsDesktop } from "@/hooks/common/useMediaQuery";
 import { client } from "@/lib/orpc/client";
 import { useUiStore } from "@/stores/uiStore";
 import type { Chat } from "@/types";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 /**
@@ -25,19 +25,29 @@ export const useSidebar = () => {
 
   const isDesktop = useIsDesktop();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // 現在開いているチャット（`/chat/[id]/...` の id）
+  const activeChatId = pathname?.split("/")[2] ?? null;
 
   useEffect(() => {
-    const fetchSidebarData = async () => {
+    let cancelled = false;
+
+    const fetchChats = async () => {
       try {
-        const chatRes = await client.chat.getChatsByUserId();
-        setChats(chatRes);
+        const res = await client.chat.getChatsByUserId();
+        if (!cancelled) setChats(res);
       } catch (error) {
         console.error("Failed to fetch sidebar data:", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-    fetchSidebarData();
+
+    fetchChats();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // デスクトップへ切り替わったらモバイル用ドロワーは閉じる
@@ -46,7 +56,7 @@ export const useSidebar = () => {
   }, [isDesktop, setDrawerOpen]);
 
   const handleChatClick = (chatId: string) => {
-    router.push(`/chat/${chatId}/tree/`);
+    router.push(`/chat/${chatId}/tree`);
     setDrawerOpen(false);
   };
 
@@ -58,6 +68,7 @@ export const useSidebar = () => {
   return {
     chats,
     loading,
+    activeChatId,
     isDesktop,
     sidebarCollapsed,
     drawerOpen,

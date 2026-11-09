@@ -1,24 +1,9 @@
 import { ChatController } from "@/app/api/(Contoller)/chat";
 import { SettingsController } from "@/app/api/(Contoller)/settings";
-import type { RawNodeDatum } from "@/types/tree";
 import { ORPCError, implement } from "@orpc/server";
 import type { ORPCContext } from "./context";
-import { type TreeNode, contract } from "./contract";
+import { contract } from "./contract";
 import { authMiddleware } from "./procedure";
-
-/**
- * `RawNodeDatum` をコントラクトの出力型（`TreeNode`）へ正規化する
- *
- * コントローラー側は attributes / children が省略可能な型を返すため、
- * 省略されていた場合は空の値で補完する。
- * @param node - 変換元のツリーノード
- * @returns attributes と children が必ず存在するツリーノード
- */
-const normalizeTreeNode = (node: RawNodeDatum): TreeNode => ({
-  name: node.name,
-  attributes: { id: node.attributes?.id ?? "" },
-  children: (node.children ?? []).map(normalizeTreeNode),
-});
 
 /**
  * コントラクトを実装する oRPC ルーター
@@ -72,16 +57,10 @@ export const getChatsByUserId = authed.chat.getChatsByUserId.handler(
   },
 );
 
-/**
- * チャット内のブランチ構造をツリー形式で取得する
- *
- * コントローラーは `RawNodeDatum`（attributes / children が省略可）を返すが、
- * コントラクトの出力スキーマでは両方必須のため、ここで正規化する。
- */
+/** チャット内のブランチ構造をツリー形式で取得する */
 export const branchStructure = authed.chat.branch.structure.handler(
   async ({ input }) => {
-    const tree = await chatController.branchStructure(input);
-    return normalizeTreeNode(tree);
+    return await chatController.branchStructure(input);
   },
 );
 

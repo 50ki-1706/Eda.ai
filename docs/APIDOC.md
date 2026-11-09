@@ -323,7 +323,7 @@ const res = await client.chat.branch.structure({ chatId });
 **Output**（`treeNodeSchema`、自己参照）:
 
 ```typescript
-// react-d3-tree の RawNodeDatum 互換オブジェクト
+// ブランチツリーのノード（`src/types/index.ts` の TreeNode）
 {
   name: string,
   attributes: { id: string },

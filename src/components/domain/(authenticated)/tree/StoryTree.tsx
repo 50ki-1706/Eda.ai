@@ -1,6 +1,6 @@
 "use client";
 
-import type { RawNodeDatum } from "@/types/tree";
+import type { TreeNode } from "@/types";
 import { Focus, Minus, Plus } from "lucide-react";
 import {
   type PointerEvent as ReactPointerEvent,
@@ -32,8 +32,8 @@ import {
  */
 
 export interface StoryTreeProps {
-  /** ツリーデータ（ルートブランチを起点とする RawNodeDatum） */
-  data: RawNodeDatum;
+  /** ツリーデータ（ルートブランチを起点とするツリーノード） */
+  data: TreeNode;
   /** ノード選択時のハンドラー（ブランチIDを受け取る） */
   onNodeClick?: (branchId: string) => void;
 }

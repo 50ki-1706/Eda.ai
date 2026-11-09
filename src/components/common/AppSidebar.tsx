@@ -44,6 +44,7 @@ export default function AppSidebar() {
   const {
     chats,
     loading,
+    activeChatId,
     isDesktop,
     sidebarCollapsed,
     drawerOpen,
@@ -59,7 +60,6 @@ export default function AppSidebar() {
 
   const expanded = isDesktop ? !sidebarCollapsed : drawerOpen;
   const ThemeIcon = themeIcon[themeMode];
-  const activeChatId = pathname?.split("/")[2] ?? null;
 
   // モバイルドロワーを開いたら閉じるボタンへフォーカスを移す
   useEffect(() => {
@@ -182,8 +182,9 @@ export default function AppSidebar() {
               {!loading && chats.length === 0 && (
                 <p className={styles.listStatus}>まだチャットがありません。</p>
               )}
+              {/* API はピン留め優先・新しい順で返すため、そのまま並べる */}
               <ul className={styles.list}>
-                {[...chats].reverse().map((chat) => (
+                {chats.map((chat) => (
                   <li key={chat.id}>
                     <button
                       type="button"

@@ -13,18 +13,20 @@ It features a unique branching architecture where each `Chat` can spawn multiple
 
 | Category        | Technology        | Details/Version                 |
 | --------------- | ----------------- | ------------------------------- |
-| **Framework**   | Next.js           | v15.3.1 (App Router)            |
-| **Language**    | TypeScript        | v5.9.2                          |
-| **UI Library**  | React             | v19.0.0                         |
-| **Styling**     | Tailwind CSS      | v4.0                            |
-| **Components**  | MUI (Material UI) | v7.0.2 (used with Tailwind)     |
+| **Framework**   | Next.js           | v16.4（App Router / Turbopack） |
+| **Language**    | TypeScript        | v7.1（`contentMappers` で `.sql` / `.module.css` を型付け） |
+| **UI Library**  | React             | v19.2                           |
+| **Styling**     | CSS Modules       | `*.module.css` + `typed-css-modules-mapper`（Tailwind / MUI は使用しない） |
+| **Icons**       | lucide-react      | v0.488                          |
 | **Database**    | PostgreSQL        | Docker-based operation          |
 | **DBアクセス**   | reylo             | v0.7.0（`.sql` 直接インポート、型はライブDBから推論。Prisma は廃止済み） |
-| **Auth**        | Better Auth       | v1.2.7                          |
-| **API/State**   | oRPC, SWR         | Server Actions also used        |
-| **Validation**  | valibot           | v1.5.0（`@orpc/valibot` で OpenAPI の JSON Schema へ変換） |
+| **Auth**        | Better Auth       | v1.7（kysely アダプター）        |
+| **API**         | oRPC              | v1.16（コントラクト + `implement`、SSE ストリーミング） |
+| **Validation**  | valibot           | v1.5（`@orpc/valibot` で OpenAPI の JSON Schema へ変換） |
+| **State**       | zustand           | v5（UI 状態のみ。サーバーデータは各フックで取得） |
 | **API Docs**    | OpenAPI + Swagger UI | `/api/openapi`（コントラクトから自動生成、OpenAPI 3.1.1） |
 | **Streaming**   | SSE (eventIterator) | チャット応答を `text/event-stream` で逐次返す |
+| **LLM**         | AI SDK            | v7（AI Gateway / OpenRouter / OpenCode Zen） |
 | **Lint/Format** | Biome             | Executed on commit via Lefthook |
 
 ## Directory Structure (`src/`)
@@ -37,7 +39,9 @@ It features a unique branching architecture where each `Chat` can spawn multiple
     - `rpc/`: oRPC の型安全 RPC ハンドラー（`/api/rpc`）
     - `openapi/`: OpenAPI ハンドラー + Swagger UI（`/api/openapi`、仕様 JSON は `/api/openapi/spec.json`）
     - `(schema)/`: valibot スキーマ（`chat/`, `settings/`）
-    - `(Contoller)/`, `(Repository)/`, `(LLM)/`: バックエンドの各層（Route Groups）
+    - `(Contoller)/`: ビジネスロジック層（`chat.ts`, `settings.ts`, `branchTree.ts`）
+    - `(Repository)/`: データアクセス層（reylo の `.sql` を呼ぶ）
+    - `(LLM)/`: LLM プロバイダー層（カタログ取得・モデル解決・生成）
 - **`components/`**: UI components
 - **`lib/`**: Application configuration and instance initialization
   - `db.ts`: postgres.js クライアント（アプリのクエリ用・reylo と組み合わせる）
@@ -48,9 +52,10 @@ It features a unique branching architecture where each `Chat` can spawn multiple
     - `procedure.ts`: 認証ミドルウェア（未ログインは `UNAUTHORIZED`）
     - `context.ts`: リクエスト単位のコンテキスト
     - `client.ts`: oRPC クライアント（`RPCLink`）。アプリからは `import { client } from "@/lib/orpc/client"` で利用
-- **`hooks/`**: Custom React hooks
-- **`types/`**: Type definitions
-- **`schema/`**: Validation schemas, etc.
+- **`hooks/`**: Custom React hooks（`common/` は画面非依存、`domain/` は画面ごと）
+- **`types/`**: ドメイン型の単一定義元（`Chat` / `Branch` / `Message` / `TreeNode` / `CatalogModel` / `SettingsState` など）
+- **`queries/`**: reylo の `.sql` クエリ（1 ファイル 1 ステートメント）
+- **`utils/`**: 純粋なユーティリティ関数
 
 ## Documentation Structure (`docs/`)
 
@@ -84,7 +89,8 @@ The core models are:
 - **Formatter/Linter**: `Biome` is used. Commits automatically trigger lint/type checks via `Lefthook`.
 - **Authentication**: `Better Auth` handles authentication. Server-side config is in `src/lib/auth.ts`, client-side in `src/lib/auth-client.ts`.
 - **API/Data Fetching**: `oRPC`（`client` を `@/lib/orpc/client` から import）と `Server Actions` を適切に使い分ける。エンドポイントは `src/lib/orpc/contract.ts` で定義し、`src/app/api/rpc` と `src/app/api/openapi` が同じルーターを公開する。
-- **Validation**: 入力・出力のスキーマは `valibot` で記述する（`src/app/api/(schema)/`）。コントラクトの `.input()` / `.output()` に指定すると、検証と OpenAPI 仕様の生成が自動で行われる。
+- **Validation**: 入力スキーマは `valibot` で記述する（`src/app/api/(schema)/`）。出力スキーマはコントラクトに定義し、`satisfies` で `src/types` のドメイン型と一致することを検証する。コントラクトの `.input()` / `.output()` に指定すると、検証と OpenAPI 仕様の生成が自動で行われる。
+- **型の参照元**: ドメイン型は必ず `@/types` から import する（サーバー層のファイルから import しない）。
 - **Streaming**: チャット応答は oRPC の `eventIterator`（SSE）で返す。クライアントは `for await` で `delta` / `done` イベントを消費する。
 
 > **Important**: For setup, execution, and quality control commands, you **MUST** refer to `docs/commands.md`.

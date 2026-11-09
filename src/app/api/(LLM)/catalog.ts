@@ -1,28 +1,16 @@
 import "server-only";
-import type { ApiKeyProvider } from "@/constants/models";
+import { type ApiKeyProvider, apiKeyProviders } from "@/constants/models";
+import type { CatalogModel } from "@/types";
 
 /**
  * 各プロバイダーの公開モデルカタログを取得する
  *
  * モデル一覧はハードコードせず、プロバイダーの公開 API から取得することで
  * 常に最新の状態を保つ。取得結果はプロセス内で一定時間キャッシュする。
+ *
+ * モデルの型（`CatalogModel`）はクライアント（モデルピッカー）でも使うため
+ * `src/types/index.ts` に置いている。
  */
-
-/** ピッカーに表示するモデル（プロバイダーをまたいで正規化した形） */
-export interface CatalogModel {
-  /** プロバイダーをまたいで一意な ID（`<provider>:<modelId>`） */
-  id: string;
-  provider: ApiKeyProvider;
-  /** プロバイダーへ渡すモデル ID */
-  modelId: string;
-  label: string;
-  /** 画像入力に対応しているか */
-  supportsVision: boolean;
-  /** 入力・出力ともに無料か */
-  isFree: boolean;
-  /** コンテキスト長（不明なら undefined） */
-  contextLength?: number;
-}
 
 /** キャッシュの有効期間（ミリ秒） */
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 分
@@ -237,9 +225,8 @@ export const getCatalogModels = async (
 
 /** 全プロバイダーのモデル一覧を並列で取得する */
 export const getAllCatalogModels = async (): Promise<CatalogModel[]> => {
-  const providers: ApiKeyProvider[] = ["openrouter", "opencode", "google"];
   const results = await Promise.all(
-    providers.map((provider) => getCatalogModels(provider)),
+    apiKeyProviders.map((provider) => getCatalogModels(provider)),
   );
   return results.flat();
 };

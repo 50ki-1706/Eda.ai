@@ -4,9 +4,7 @@ import * as v from "valibot";
  * チャット関連 API の入力スキーマ（valibot）
  *
  * oRPC のコントラクト（`src/lib/orpc/contract.ts`）とサーバー実装の双方から参照される。
- * 入力型は `v.InferInput`、出力型は `v.InferOutput` で導出する。
- * （バリデーション変換を挟んでいないため現状は両者同型だが、
- * コントラクトの `.input()` / `.output()` の要求に合わせて別名で公開している）
+ * 入力型は `v.InferOutput`（= バリデーション後の型）で導出する。
  */
 
 /** プロンプトに添付するファイル（Base64 データと MIME タイプ） */
@@ -58,23 +56,6 @@ export const branchStructureInputSchema = v.object({
 });
 
 /** 入力型（コントラクトの `.input()`・サーバー実装の引数で使う） */
-export type CreateChatInputPayload = v.InferInput<typeof createChatInputSchema>;
-export type SendMessageInputPayload = v.InferInput<
-  typeof sendMessageInputSchema
->;
-export type GetMessageInputPayload = v.InferInput<typeof getMessageInputSchema>;
-export type NewBranchInputPayload = v.InferInput<typeof newBranchInputSchema>;
-export type MergeBranchInputPayload = v.InferInput<
-  typeof mergeBranchInputSchema
->;
-export type UpdateChatIsPinnedInputPayload = v.InferInput<
-  typeof updateChatIsPinnedInputSchema
->;
-export type BranchStructureInputPayload = v.InferInput<
-  typeof branchStructureInputSchema
->;
-
-/** 出力型（バリデーション後の型。既存のエクスポート名を維持する） */
 export type CreateChatInput = v.InferOutput<typeof createChatInputSchema>;
 export type SendMessageInput = v.InferOutput<typeof sendMessageInputSchema>;
 export type GetMessageInput = v.InferOutput<typeof getMessageInputSchema>;

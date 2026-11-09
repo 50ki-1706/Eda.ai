@@ -1,73 +1,72 @@
-import { client } from "@/lib/orpc/client";
-import type { RawNodeDatum } from "@/types/tree";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+"use client";
 
-function useTree() {
+import { client } from "@/lib/orpc/client";
+import type { TreeNode } from "@/types";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+
+/**
+ * ブランチツリー画面の状態を扱うフック
+ *
+ * - ツリー構造の取得（初回・マージ後）
+ * - ノード選択時の動作（通常は遷移、マージモードではマージ）
+ */
+export const useTree = () => {
   const params = useParams();
   const router = useRouter();
-  const [branchStructure, setBranchStructure] = useState<RawNodeDatum>();
-  const [isChecked, setIsChecked] = useState(false);
+  const chatId = typeof params.id === "string" ? params.id : "";
+
+  const [branchStructure, setBranchStructure] = useState<TreeNode>();
+  const [mergeMode, setMergeMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  /** ツリー構造を取得し直す */
+  const fetchStructure = useCallback(async () => {
+    if (!chatId) return;
+    const res = await client.chat.branch.structure({ chatId });
+    setBranchStructure(res);
+  }, [chatId]);
+
   useEffect(() => {
-    if (typeof params.id !== "string") return;
-    (async () => {
+    if (!chatId) return;
+
+    let cancelled = false;
+    const load = async () => {
       try {
-        // Sidebar から渡される chatId は chat テーブルのものなので chat ルーターを利用する
-        const res = await client.chat.branch.structure({
-          chatId: params.id as string,
-        });
-        setBranchStructure(res);
-      } catch (e) {
-        console.error("Failed to fetch branch structure (chat):", e);
+        await fetchStructure();
+      } catch (error) {
+        console.error("Failed to fetch branch structure (chat):", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    })();
-  }, [params.id]);
+    };
 
-  const handleBranchNavigation = (branchId: string) => {
-    if (branchId) router.push(`/chat/${params.id}/branch/${branchId}`);
-  };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [chatId, fetchStructure]);
 
-  const handleBranchMerge = async (branchId: string) => {
-    const chatId: string = params.id as string;
-    if (branchId) {
-      await client.chat.branch.merge({
-        branchId: branchId,
-      });
+  /** ノード選択時の動作。マージモードならマージし、そうでなければブランチへ遷移する */
+  const handleNodeClick = async (branchId: string) => {
+    if (!branchId) return;
 
-      const res = await client.chat.branch.structure({
-        chatId: chatId,
-      });
-
-      setBranchStructure(res);
-      setIsChecked(false);
+    if (!mergeMode) {
+      router.push(`/chat/${chatId}/branch/${branchId}`);
+      return;
     }
+
+    await client.chat.branch.merge({ branchId });
+    await fetchStructure();
+    setMergeMode(false);
   };
 
-  const handleClick = async (
-    branchId: string,
-    handleBranchMerge: (branchId: string) => Promise<void>,
-    handleBranchNavigation: (branchId: string) => void,
-  ): Promise<void> => {
-    if (isChecked) {
-      await handleBranchMerge(branchId);
-    } else {
-      handleBranchNavigation(branchId);
-    }
-  };
   return {
-    handleBranchMerge,
-    handleBranchNavigation,
-    handleClick,
-    isChecked,
-    setIsChecked,
+    chatId,
     branchStructure,
     loading,
-    chatId: typeof params.id === "string" ? params.id : "",
+    mergeMode,
+    setMergeMode,
+    handleNodeClick,
   };
-}
-
-export default useTree;
+};

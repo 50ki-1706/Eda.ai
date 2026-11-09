@@ -1,5 +1,5 @@
-import type { CatalogModel } from "@/app/api/(LLM)/catalog";
 import type { ApiKeyProvider } from "@/constants/models";
+import type { CatalogModel } from "@/types";
 import { sendKeyMapping } from "@/utils/keyMapping";
 import { ArrowUp, Paperclip, X } from "lucide-react";
 import type { ChangeEvent, RefObject } from "react";

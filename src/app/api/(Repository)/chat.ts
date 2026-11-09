@@ -12,93 +12,88 @@ import listMessagesByBranch from "@/queries/list_messages_by_branch.sql";
 import moveMessagesToBranch from "@/queries/move_messages_to_branch.sql";
 import updateChatPinned from "@/queries/update_chat_pinned.sql";
 
+/** メッセージ作成に必要な値 */
+export interface NewMessageParams {
+  branchId: string;
+  promptText: string;
+  promptFile: string | null;
+  response: string;
+  /** 親メッセージ ID（ブランチ最初のメッセージなら null） */
+  parentId: string | null;
+}
+
+/**
+ * チャット・ブランチ・メッセージの永続化を担当するリポジトリ
+ *
+ * 引数は取り違えを防ぐため、位置引数ではなくオブジェクトで受け取る。
+ * ビジネスロジックは持たず、クエリの実行とトランザクションの境界だけを扱う。
+ */
 export class ChatRepository {
-  create = async (
-    summary: string,
-    userId: string,
-    promptText: string,
-    promptFile: string | null,
-    response: string,
-  ) => {
-    // Chat → Branch → Message を1トランザクションで作成する
+  /**
+   * 新規チャットを Chat → Branch → Message の順で 1 トランザクションで作成する
+   * 最初のブランチは必ず `main`（親なし）になる
+   */
+  createChatWithFirstMessage = async (params: {
+    summary: string;
+    userId: string;
+    message: Omit<NewMessageParams, "branchId" | "parentId">;
+  }) => {
     return await db.begin(async (tx) => {
-      // 1. Chat を作成
-      const newChat = await createChat.run(tx, {
-        summary,
-        user_id: userId,
+      const chat = await createChat.run(tx, {
+        summary: params.summary,
+        user_id: params.userId,
       });
 
-      // 2. Branch を作成（最初のブランチは "main" とする）
-      const newBranch = await createBranch.run(tx, {
+      const branch = await createBranch.run(tx, {
         summary: "main",
         parent_branch_id: null,
-        chat_id: newChat.id,
+        chat_id: chat.id,
       });
 
-      // 3. Message を作成
-      const newMessage = await createMessage.run(tx, {
-        prompt_text: promptText,
-        prompt_file: promptFile,
+      const message = await createMessage.run(tx, {
+        prompt_text: params.message.promptText,
+        prompt_file: params.message.promptFile,
         parent_id: null,
-        response,
-        branch_id: newBranch.id,
+        response: params.message.response,
+        branch_id: branch.id,
       });
 
-      return {
-        chat: newChat,
-        branch: newBranch,
-        message: newMessage,
-      };
+      return { chat, branch, message };
     });
   };
 
-  getSpecificMessage = async (messageId: string) => {
+  createMessage = async (params: NewMessageParams) => {
+    return await createMessage.run(db, {
+      prompt_text: params.promptText,
+      prompt_file: params.promptFile,
+      parent_id: params.parentId,
+      response: params.response,
+      branch_id: params.branchId,
+    });
+  };
+
+  getMessage = async (messageId: string) => {
     return await getMessage.run(db, { id: messageId });
   };
 
-  createMessage = async (
-    branchId: string,
-    promptText: string,
-    promptFile: string | null,
-    response: string,
-    parentId: string | null,
-  ) => {
-    return await createMessage.run(db, {
-      prompt_text: promptText,
-      prompt_file: promptFile,
-      parent_id: parentId,
-      response,
-      branch_id: branchId,
-    });
-  };
-
-  getSpecificBranch = async (branchId: string) => {
+  getBranch = async (branchId: string) => {
     return await getBranch.run(db, { id: branchId });
   };
 
-  /**
-   * 子孫ブランチ配下のメッセージを指定ブランチへ一括で付け替える
-   */
-  updateBranchInMessage = async (
-    parentBranchId: string,
-    branchIds: string[],
-  ) => {
-    await moveMessagesToBranch.run(db, {
-      branch_id: parentBranchId,
-      branch_ids: branchIds,
+  createBranch = async (params: {
+    summary: string;
+    parentBranchId: string;
+    chatId: string;
+  }) => {
+    return await createBranch.run(db, {
+      summary: params.summary,
+      parent_branch_id: params.parentBranchId,
+      chat_id: params.chatId,
     });
   };
 
-  createBranch = async (
-    summary: string,
-    parentBranchId: string,
-    chatId: string,
-  ) => {
-    return await createBranch.run(db, {
-      summary,
-      parent_branch_id: parentBranchId,
-      chat_id: chatId,
-    });
+  deleteBranch = async (branchId: string) => {
+    await deleteBranch.run(db, { branch_id: branchId });
   };
 
   getMessages = async (branchId: string) => {
@@ -116,10 +111,6 @@ export class ChatRepository {
     return await listChatsByUser.run(db, { user_id: userId });
   };
 
-  deleteBranch = async (branchId: string) => {
-    await deleteBranch.run(db, { branch_id: branchId });
-  };
-
   /**
    * 再帰 CTE でメッセージの parentId チェーンを一括取得する
    * N+1 回のクエリを 1 回に削減
@@ -132,7 +123,20 @@ export class ChatRepository {
    * チャット内の全ブランチを一括取得する
    * ループ内での個別取得（N+1）を回避
    */
-  getAllBranchesInChat = async (chatId: string) => {
+  getBranchesInChat = async (chatId: string) => {
     return await listBranchesInChat.run(db, { chat_id: chatId });
+  };
+
+  /**
+   * 指定ブランチ群のメッセージを別ブランチへ一括で付け替える（マージ時に使用）
+   */
+  moveMessagesToBranch = async (params: {
+    targetBranchId: string;
+    sourceBranchIds: string[];
+  }) => {
+    await moveMessagesToBranch.run(db, {
+      branch_id: params.targetBranchId,
+      branch_ids: params.sourceBranchIds,
+    });
   };
 }

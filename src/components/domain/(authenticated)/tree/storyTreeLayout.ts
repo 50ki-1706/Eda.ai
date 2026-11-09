@@ -10,7 +10,7 @@
  * 2. 親ノードは子ノード位置の中央に置く（物語の幹が分岐点で束ねられるイメージ）
  */
 
-import type { RawNodeDatum } from "@/types/tree";
+import type { TreeNode } from "@/types";
 
 /** ノードの描画サイズと余白 */
 export const STORY_NODE_WIDTH = 200;
@@ -53,9 +53,9 @@ const VERTICAL_STEP = STORY_NODE_HEIGHT + STORY_SIBLING_GAP;
 const HORIZONTAL_STEP = STORY_NODE_WIDTH + STORY_LEVEL_GAP;
 
 /**
- * RawNodeDatum のツリーを描画用の LayoutNode ツリーへ変換し、座標を割り当てる
+ * ツリーノード（`TreeNode`）を描画用の LayoutNode ツリーへ変換し、座標を割り当てる
  */
-export const layoutStoryTree = (data: RawNodeDatum): StoryTreeLayout => {
+export const layoutStoryTree = (data: TreeNode): StoryTreeLayout => {
   const nodes: LayoutNode[] = [];
   const edges: { parent: LayoutNode; child: LayoutNode }[] = [];
 
@@ -67,7 +67,7 @@ export const layoutStoryTree = (data: RawNodeDatum): StoryTreeLayout => {
    * 戻り値はこの部分木が占める縦方向の幅の中心
    */
   const build = (
-    node: RawNodeDatum,
+    node: TreeNode,
     depth: number,
   ): { node: LayoutNode; centerY: number; height: number } => {
     const children = (node.children ?? []).map((child) =>
