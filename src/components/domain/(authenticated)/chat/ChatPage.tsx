@@ -1,12 +1,12 @@
 "use client";
+import AppShell from "@/components/common/AppShell";
 import MessageInputBar from "@/components/common/MessageInputBar";
-import Sidebar from "@/components/common/Sidebar";
 import Toast from "@/components/common/Toast";
 import { useUserSettings } from "@/hooks/common/useModelPicker";
 import { useMessageInput } from "@/hooks/domain/chat/useMessageInput";
 import { apiClient } from "@/lib/trpc";
 import type { Message } from "@/types";
-import { TreePine } from "lucide-react";
+import { GitBranch, Network } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -107,41 +107,54 @@ const ChatPage = () => {
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.body}>
-        <Sidebar />
-        <main className={styles.main}>
-          <ChatMessageList
-            messages={newMessages}
-            onCreateBranch={handleCreateBranch}
-            chatListRef={chatListRef}
-          />
-          <div className={styles.inputArea}>
-            <div className={styles.inputRow}>
-              <MessageInputBar
-                {...messageInput}
-                modelId={modelId}
-                onModelChange={handleModelChange}
-                modelAvailability={availability}
-                models={models}
-                className={styles.inputBar}
-              />
-              <Link
-                href="/chat/[id]/branch/tree"
-                as={`/chat/${chatId}/tree`}
-                aria-label="ブランチツリーを表示"
-                title="ブランチツリーを表示"
-                className={styles.treeLink}
-              >
-                <TreePine aria-hidden="true" />
-              </Link>
-            </div>
+    <AppShell>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <div className={styles.headerText}>
+            <span className={styles.headerIcon} aria-hidden="true">
+              <GitBranch size={16} />
+            </span>
+            <h1 className={styles.headerTitle}>チャット</h1>
+            <span className={styles.headerMeta}>
+              {newMessages.length} 件のメッセージ
+            </span>
           </div>
-        </main>
+          <Link
+            href={`/chat/${chatId}/tree`}
+            className={styles.headerAction}
+            aria-label="ブランチツリーを表示"
+            title="ブランチツリーを表示"
+          >
+            <Network size={16} aria-hidden="true" />
+            <span className={styles.headerActionLabel}>ツリー</span>
+          </Link>
+        </div>
+      </header>
+
+      <div className={styles.transcript}>
+        <ChatMessageList
+          messages={newMessages}
+          onCreateBranch={handleCreateBranch}
+          chatListRef={chatListRef}
+        />
+      </div>
+
+      <div className={styles.composerArea}>
+        <div className={styles.composerInner}>
+          <MessageInputBar
+            {...messageInput}
+            modelId={modelId}
+            onModelChange={handleModelChange}
+            modelAvailability={availability}
+            models={models}
+            placeholder="返信を入力…"
+          />
+          <p className={styles.hint}>Enter で送信 / Shift + Enter で改行</p>
+        </div>
       </div>
 
       <Toast message={toast} onClose={() => setToast(null)} />
-    </div>
+    </AppShell>
   );
 };
 

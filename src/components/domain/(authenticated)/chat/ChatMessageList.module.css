@@ -2,14 +2,13 @@
 
 .container {
   width: 100%;
-  overflow-y: auto;
-  padding: var(--space-3) var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-4);
 }
 
-@media (min-width: 768px) {
-  .container {
-    padding: var(--space-3) var(--space-3);
-  }
+.inner {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
 }
 
 /* 日付区切り */
@@ -17,7 +16,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin: 20px 0;
+  margin: var(--space-1) 0 var(--space-3);
 }
 
 .separatorLine {
@@ -35,89 +34,101 @@
 .messageGroup {
   display: flex;
   flex-direction: column;
-  gap: 56px;
-  margin-bottom: var(--space-1);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  animation: eda-rise-in var(--transition-base);
 }
 
-/* AI応答のブロック */
-.responseBlock {
+/* ===== ユーザー発言 ===== */
+.userRow {
   display: flex;
-  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.userBubble {
+  max-width: min(80%, 560px);
+  padding: 10px var(--space-2);
+  border-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-sm);
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ===== AI 応答 ===== */
+.assistantRow {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.avatar {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.responseWidth {
-  width: 75%;
-}
-
-/* ブランチ作成ボタン行 */
-.branchRow {
-  width: 75%;
-  display: flex;
-  justify-content: flex-start;
+  width: 28px;
+  height: 28px;
   margin-top: 2px;
-  padding-left: var(--space-1);
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.assistantBody {
+  flex: 1;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+/* 応答に対する操作（ブランチ作成） */
+.actions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
 }
 
 .branchButton {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: var(--radius-sm);
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
   color: var(--color-text-secondary);
+  font-size: 12px;
+  transition: border-color var(--transition-fast), color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .branchButton:hover {
-  color: var(--color-text-main);
-  background-color: rgb(0 0 0 / 0.06);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
 }
 
-/* 吹き出し */
-.bubbleRow {
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 10px;
-}
-
-.bubbleRowTight {
-  margin-bottom: 4px;
-}
-
-.mine {
-  justify-content: flex-end;
-}
-
-.bubble {
-  max-width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-background-main);
-  box-shadow: var(--elevation-1);
-}
-
-.bubbleMine {
-  background-color: var(--color-primary);
-  color: var(--color-primary-foreground);
-  border-color: transparent;
-  box-shadow: var(--elevation-1);
-}
-
-.time {
-  display: block;
-  margin-top: 2px;
-  text-align: right;
+/* 空の会話 */
+.empty {
+  padding: var(--space-5) 0;
+  text-align: center;
   font-size: var(--font-size-caption);
-  opacity: 0.6;
+  color: var(--color-text-secondary);
 }
 
 .scrollAnchor {
   height: 1px;
 }
 
-/* Markdown レンダリングの基本スタイル */
+/* ===== Markdown レンダリングの基本スタイル ===== */
+.markdown {
+  line-height: var(--line-height-body);
+  overflow-wrap: anywhere;
+}
+
 .markdown > :first-child {
   margin-top: 0;
 }
@@ -132,58 +143,106 @@
 .markdown h4,
 .markdown h5,
 .markdown h6 {
-  margin: 12px 0 4px;
+  margin: var(--space-2) 0 var(--space-1);
   line-height: var(--line-height-tight);
+  font-weight: 700;
+}
+
+.markdown h1 {
+  font-size: var(--font-size-heading);
+}
+
+.markdown h2 {
+  font-size: var(--font-size-md);
+}
+
+.markdown h3 {
+  font-size: var(--font-size-body);
 }
 
 .markdown p {
-  margin: 4px 0;
+  margin: var(--space-1) 0;
 }
 
 .markdown ul,
 .markdown ol {
-  margin: 4px 0;
+  margin: var(--space-1) 0;
   padding-left: var(--space-3);
 }
 
+.markdown ul {
+  list-style: disc;
+}
+
+.markdown ol {
+  list-style: decimal;
+}
+
+.markdown li {
+  margin: 2px 0;
+}
+
 .markdown pre {
-  margin: 4px 0;
-  padding: var(--space-1);
+  margin: var(--space-1) 0;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-background-sub);
   overflow-x: auto;
+  font-size: var(--font-size-caption);
+  line-height: 1.6;
 }
 
 .markdown code {
-  background-color: var(--color-background-sub);
+  padding: 1px 5px;
   border-radius: var(--radius-sm);
-  padding: 1px 4px;
+  background-color: var(--color-background-sub);
   font-size: 0.9em;
 }
 
 .markdown pre code {
-  background: none;
   padding: 0;
+  background: none;
 }
 
 .markdown blockquote {
-  margin: 4px 0;
+  margin: var(--space-1) 0;
   padding-left: var(--space-2);
   border-left: 3px solid var(--color-border);
   color: var(--color-text-secondary);
 }
 
 .markdown table {
+  margin: var(--space-1) 0;
   border-collapse: collapse;
-  margin: 4px 0;
 }
 
 .markdown th,
 .markdown td {
-  border: 1px solid var(--color-border);
   padding: 4px var(--space-1);
+  border: 1px solid var(--color-border);
+}
+
+.markdown th {
+  background-color: var(--color-background-sub);
 }
 
 .markdown a {
   word-break: break-all;
+}
+
+.markdown hr {
+  margin: var(--space-2) 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 767px) {
+  .container {
+    padding: var(--space-2) var(--space-2) var(--space-4);
+  }
+
+  .userBubble {
+    max-width: 88%;
+  }
 }

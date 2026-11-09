@@ -1,43 +1,59 @@
 "use client";
 
 import type { Message } from "@/types";
-import { GitBranch } from "lucide-react";
+import { GitBranch, Sparkles } from "lucide-react";
 import { memo } from "react";
 import type React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import styles from "./ChatMessageList.module.css";
 
-/* バブル吹き出し */
+/* ユーザー発言の吹き出し */
 interface BubbleProps {
-  mine?: boolean;
   text: string;
-  time?: string;
-  groupedTop?: boolean;
-  groupedBottom?: boolean;
 }
 
-const Bubble = memo(function Bubble({
-  mine,
-  text,
-  time,
-  groupedBottom,
-}: BubbleProps) {
+const UserBubble = memo(function UserBubble({ text }: BubbleProps) {
   return (
-    <div
-      className={`${styles.bubbleRow} ${mine ? styles.mine : ""} ${
-        groupedBottom ? styles.bubbleRowTight : ""
-      }`
-        .trim()
-        .replace(/\s+/g, " ")}
-    >
-      <div
-        className={`${styles.bubble} ${mine ? styles.bubbleMine : ""}`.trim()}
-      >
+    <div className={styles.userRow}>
+      <div className={styles.userBubble}>{text}</div>
+    </div>
+  );
+});
+
+/* AI 応答: 吹き出しを使わず、本文を読みやすく全幅で表示する */
+interface ResponseProps {
+  text: string;
+  onCreateBranch?: () => void;
+}
+
+const AssistantResponse = memo(function AssistantResponse({
+  text,
+  onCreateBranch,
+}: ResponseProps) {
+  return (
+    <div className={styles.assistantRow}>
+      <span className={styles.avatar} aria-hidden="true">
+        <Sparkles size={16} />
+      </span>
+      <div className={styles.assistantBody}>
         <div className={styles.markdown}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
         </div>
-        {!!time && <span className={styles.time}>{time}</span>}
+        {onCreateBranch && (
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.branchButton}
+              aria-label="この対話からブランチを作成"
+              title="この対話からブランチを作成"
+              onClick={onCreateBranch}
+            >
+              <GitBranch size={14} aria-hidden="true" />
+              <span>ブランチを作成</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -64,6 +80,10 @@ export interface ChatMessageListProps {
   chatListRef?: React.RefObject<HTMLDivElement | null>;
 }
 
+/**
+ * 会話のメッセージ一覧
+ * ユーザー発言は右寄せの吹き出し、AI 応答はアイコン付きの本文として表示する。
+ */
 export const ChatMessageList = ({
   messages,
   dateLabel = "Today",
@@ -72,36 +92,28 @@ export const ChatMessageList = ({
 }: ChatMessageListProps) => {
   return (
     <div className={styles.container}>
-      <DateSeparator label={dateLabel} />
-      {messages.map((msg) => (
-        <div key={msg.id}>
-          <div className={styles.messageGroup}>
-            <div>
-              {msg.promptText && (
-                <Bubble mine text={msg.promptText} groupedBottom />
-              )}
-            </div>
-
-            <div className={styles.responseBlock}>
-              <div className={styles.responseWidth}>
-                {msg.response && <Bubble text={msg.response} groupedTop />}
-              </div>
-              <div className={styles.branchRow}>
-                <button
-                  type="button"
-                  className={styles.branchButton}
-                  aria-label="この対話からブランチを作成"
-                  title="この対話からブランチを作成"
-                  onClick={() => onCreateBranch?.(msg.id)}
-                >
-                  <GitBranch size={16} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
+      <div className={styles.inner}>
+        <DateSeparator label={dateLabel} />
+        {messages.length === 0 && (
+          <p className={styles.empty}>
+            まだメッセージがありません。下の入力欄から話しかけてみましょう。
+          </p>
+        )}
+        {messages.map((msg) => (
+          <div key={msg.id} className={styles.messageGroup}>
+            {msg.promptText && <UserBubble text={msg.promptText} />}
+            {msg.response && (
+              <AssistantResponse
+                text={msg.response}
+                onCreateBranch={
+                  onCreateBranch ? () => onCreateBranch(msg.id) : undefined
+                }
+              />
+            )}
           </div>
-        </div>
-      ))}
-      <div ref={chatListRef} className={styles.scrollAnchor} />
+        ))}
+        <div ref={chatListRef} className={styles.scrollAnchor} />
+      </div>
     </div>
   );
 };

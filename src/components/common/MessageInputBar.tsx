@@ -1,7 +1,7 @@
 import type { CatalogModel } from "@/app/api/(LLM)/catalog";
 import type { ApiKeyProvider } from "@/constants/models";
 import { sendKeyMapping } from "@/utils/keyMapping";
-import { Paperclip, Send, X } from "lucide-react";
+import { ArrowUp, Paperclip, X } from "lucide-react";
 import type { ChangeEvent, RefObject } from "react";
 import styles from "./MessageInputBar.module.css";
 import ModelPicker from "./ModelPicker";
@@ -26,8 +26,16 @@ interface MessageInputBarProps {
   models: CatalogModel[];
   /** 外側のレイアウト調整用クラス */
   className?: string;
+  /** 入力欄のプレースホルダー */
+  placeholder?: string;
 }
 
+/**
+ * メッセージ入力バー
+ *
+ * 角丸の大きなカード型コンポーザ。上段にテキスト、下段にツール（添付・モデル）と
+ * 送信ボタンを並べ、チャットアプリらしい操作の流れを作る。
+ */
 export default function MessageInputBar({
   text,
   setText,
@@ -43,20 +51,16 @@ export default function MessageInputBar({
   modelAvailability,
   models,
   className,
+  placeholder = "メッセージを入力…",
 }: MessageInputBarProps) {
+  const canSend = (!!text.trim() || !!files) && !sending;
+
   return (
     <div className={`${styles.wrapper} ${className ?? ""}`.trim()}>
-      <div className={styles.metaRow}>
-        <ModelPicker
-          modelId={modelId}
-          onModelChange={onModelChange}
-          availability={modelAvailability}
-          models={models}
-        />
-      </div>
       {files && files.length > 0 && (
         <div className={styles.fileRow}>
           <span className={styles.fileChip} title={files[0].name}>
+            <Paperclip size={14} aria-hidden="true" />
             <span className={styles.fileName}>{files[0].name || ""}</span>
             <button
               type="button"
@@ -70,38 +74,49 @@ export default function MessageInputBar({
         </div>
       )}
       <div className={styles.bar}>
-        <button
-          type="button"
-          className={styles.toolButton}
-          aria-label="ファイルを添付"
-          title="ファイルを添付"
-          onClick={openPicker}
-        >
-          <Paperclip size={18} aria-hidden="true" />
-        </button>
         <textarea
           className={styles.textarea}
-          aria-label="message input"
-          placeholder="メッセージを入力…"
+          aria-label="メッセージ入力"
+          placeholder={placeholder}
           rows={1}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => sendKeyMapping(e.nativeEvent, onSend)}
           disabled={sending}
         />
-        <button
-          type="button"
-          className={styles.sendButton}
-          aria-label="send message"
-          onClick={onSend}
-          disabled={!text.trim() && !files}
-        >
-          {sending ? (
-            <span className="eda-spinner" aria-hidden="true" />
-          ) : (
-            <Send size={18} aria-hidden="true" />
-          )}
-        </button>
+        <div className={styles.toolbar}>
+          <div className={styles.toolbarLeft}>
+            <button
+              type="button"
+              className={styles.toolButton}
+              aria-label="ファイルを添付"
+              title="ファイルを添付"
+              onClick={openPicker}
+            >
+              <Paperclip size={18} aria-hidden="true" />
+            </button>
+            <ModelPicker
+              modelId={modelId}
+              onModelChange={onModelChange}
+              availability={modelAvailability}
+              models={models}
+            />
+          </div>
+          <button
+            type="button"
+            className={styles.sendButton}
+            aria-label="メッセージを送信"
+            title="送信（Enter）"
+            onClick={onSend}
+            disabled={!canSend}
+          >
+            {sending ? (
+              <span className={styles.spinner} aria-hidden="true" />
+            ) : (
+              <ArrowUp size={18} aria-hidden="true" />
+            )}
+          </button>
+        </div>
       </div>
       <input ref={fileInputRef} type="file" hidden onChange={onPicked} />
     </div>

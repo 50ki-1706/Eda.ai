@@ -8,6 +8,7 @@ function useTree() {
   const router = useRouter();
   const [branchStructure, setBranchStructure] = useState<RawNodeDatum>();
   const [isChecked, setIsChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (typeof params.id !== "string") return;
@@ -20,6 +21,8 @@ function useTree() {
         setBranchStructure(res);
       } catch (e) {
         console.error("Failed to fetch branch structure (chat):", e);
+      } finally {
+        setLoading(false);
       }
     })();
   }, [params.id]);
@@ -62,6 +65,8 @@ function useTree() {
     isChecked,
     setIsChecked,
     branchStructure,
+    loading,
+    chatId: typeof params.id === "string" ? params.id : "",
   };
 }
 

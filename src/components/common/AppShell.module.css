@@ -1,0 +1,34 @@
+/* アプリシェル: サイドバー + メインコンテンツ */
+.shell {
+  display: flex;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--color-background-main);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.main[data-scrollable] {
+  overflow-y: auto;
+}
+
+/* サイドバーなし（ログイン画面など）のときは中央寄せのコンテナにする */
+.main[data-full] {
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 767px) {
+  /* モバイルではメニューボタンと重ならないよう上端に余白を確保する */
+  .main {
+    padding-top: 0;
+  }
+}

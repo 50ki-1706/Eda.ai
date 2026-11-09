@@ -1,0 +1,279 @@
+/* アプリ共通サイドバー: デスクトップは折りたたみレール、モバイルはドロワー */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: var(--sidebar-width-collapsed);
+  height: 100dvh;
+  padding: var(--space-1) 6px var(--space-1);
+  border-right: 1px solid var(--color-border);
+  background-color: var(--color-background-sub);
+  overflow: hidden;
+  transition: width var(--transition-base);
+}
+
+.sidebar[data-expanded] {
+  width: var(--sidebar-width);
+}
+
+/* モバイル: オーバーレイのドロワー */
+.sidebar[data-mobile] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1201;
+  width: var(--sidebar-width);
+  transform: translateX(-100%);
+  transition: transform var(--transition-base);
+  box-shadow: var(--elevation-3);
+}
+
+.sidebar[data-mobile][data-open] {
+  transform: translateX(0);
+}
+
+/* モバイル: ドロワー背後のオーバーレイ */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  cursor: default;
+  background-color: var(--color-scrim);
+  animation: eda-fade-in var(--transition-base);
+}
+
+/* モバイル: 画面上部のメニューボタン（ヘッダーに重ねる） */
+.mobileTrigger {
+  position: fixed;
+  top: 10px;
+  left: var(--space-2);
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-main);
+}
+
+.mobileTrigger:hover {
+  background-color: var(--color-surface-hover);
+}
+
+/* ===== ブランド行 ===== */
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0 2px 0 4px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--color-text-main);
+  font-weight: 700;
+  font-size: var(--font-size-md);
+  letter-spacing: 0.02em;
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-text-main);
+  color: var(--color-background-main);
+}
+
+.brandName {
+  white-space: nowrap;
+}
+
+.collapseButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+}
+
+.collapseButton:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-main);
+}
+
+/* 折りたたみ中はシェブロンを反転させる */
+.collapseIcon {
+  transition: transform var(--transition-base);
+}
+
+.collapseIcon[data-collapsed] {
+  transform: rotate(180deg);
+}
+
+/* ===== 新規チャット ===== */
+.actions {
+  margin: var(--space-1) 0;
+}
+
+.newChatButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-main);
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+  white-space: nowrap;
+  transition: border-color var(--transition-fast), background-color
+    var(--transition-fast);
+}
+
+.newChatButton:hover {
+  border-color: var(--color-border-strong);
+  background-color: var(--color-surface-hover);
+}
+
+/* ===== チャット一覧 ===== */
+.sectionLabel {
+  padding: var(--space-1) var(--space-1) 4px;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.listArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -2px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-1);
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+  padding: 7px var(--space-1);
+  border-radius: var(--radius-md);
+  text-align: left;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-main);
+  transition: background-color var(--transition-fast);
+}
+
+.listItem:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.listItem[data-active] {
+  background-color: var(--color-surface-selected);
+  color: var(--color-primary);
+}
+
+.listIcon {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.listItem[data-active] .listIcon {
+  color: var(--color-primary);
+}
+
+.listLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.listStatus .eda-spinner {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+/* ===== フッター（テーマ・設定・ログアウト） ===== */
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+  padding-top: var(--space-1);
+  /* 画面左下の開発用バッジと重ならないよう下端に余白を確保する */
+  padding-bottom: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.footerButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  text-align: left;
+  transition: background-color var(--transition-fast), color
+    var(--transition-fast);
+}
+
+.footerButton:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-main);
+  text-decoration: none;
+}
+
+.footerButton[data-active] {
+  color: var(--color-primary);
+}
+
+.footerLabel {
+  white-space: nowrap;
+}
+
+/* 折りたたみ中はアイコンだけを中央に揃える */
+.sidebar:not([data-expanded]) .footerButton {
+  justify-content: center;
+}

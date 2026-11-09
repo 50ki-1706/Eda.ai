@@ -43,13 +43,15 @@ const MAX_SCALE = 2.5;
 
 type Transform = { x: number; y: number; k: number };
 
-const INITIAL_TRANSFORM: Transform = { x: 80, y: 0, k: 1 };
+/** 最初のノードを画面左端から離す余白（px） */
+const VIEW_PADDING = 24;
 
 export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
   const layout = useMemo(() => layoutStoryTree(data), [data]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [transform, setTransform] = useState<Transform>(INITIAL_TRANSFORM);
+  // コンテナサイズが分かるまでは非表示にしておく（初期位置のズレを防ぐ）
+  const [transform, setTransform] = useState<Transform | null>(null);
 
   // ドラッグによるパン状態
   const dragStateRef = useRef<{
@@ -70,14 +72,30 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
     return { cx: (rect?.width ?? 0) / 2, cy: (rect?.height ?? 0) / 2 };
   }, []);
 
-  /** ルートノードを画面中央に見立てて初期位置へ戻す */
+  /**
+   * ルートノードを縦方向の中央に置き、横は左端から余白ぶん離して初期位置へ戻す
+   *
+   * 横方向はツリーの左端（bounds.minX）を基準にするため、
+   * ルートの深さに関係なく最初のノードが必ず画面内に収まる。
+   */
   const resetView = useCallback(() => {
-    const { cy } = getCenter();
-    setTransform({ x: 80, y: cy - layout.root.y, k: 1 });
-  }, [getCenter, layout.root.y]);
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return;
+    setTransform({
+      x: VIEW_PADDING - layout.bounds.minX,
+      y: rect.height / 2 - layout.root.y,
+      k: 1,
+    });
+  }, [layout.bounds.minX, layout.root.y]);
 
+  // マウント時とコンテナサイズの変化時に初期位置を計算し直す
   useEffect(() => {
     resetView();
+    const element = containerRef.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => resetView());
+    observer.observe(element);
+    return () => observer.disconnect();
   }, [resetView]);
 
   /** ホイールでズーム（カーソル位置を中心に） */
@@ -88,6 +106,7 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
     setTransform((prev) => {
+      if (!prev) return prev;
       const k = Math.min(
         MAX_SCALE,
         Math.max(MIN_SCALE, prev.k * (e.deltaY < 0 ? 1.1 : 0.9)),
@@ -106,6 +125,7 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
     (factor: number) => {
       const { cx, cy } = getCenter();
       setTransform((prev) => {
+        if (!prev) return prev;
         const k = Math.min(MAX_SCALE, Math.max(MIN_SCALE, prev.k * factor));
         const ratio = k / prev.k;
         return {
@@ -127,8 +147,8 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
         pointerId: e.pointerId,
         startX: e.clientX,
         startY: e.clientY,
-        originX: transform.x,
-        originY: transform.y,
+        originX: transform?.x ?? 0,
+        originY: transform?.y ?? 0,
         moved: false,
       };
     },
@@ -145,11 +165,9 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
         drag.moved = true;
         wasDraggingRef.current = true;
       }
-      setTransform((prev) => ({
-        ...prev,
-        x: drag.originX + dx,
-        y: drag.originY + dy,
-      }));
+      setTransform((prev) =>
+        prev ? { ...prev, x: drag.originX + dx, y: drag.originY + dy } : prev,
+      );
     },
     [],
   );
@@ -189,8 +207,11 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
       return (
         <g
           key={node.id}
+          className={styles.node}
+          data-leaf={node.isLeaf || undefined}
           transform={`translate(${node.x}, ${node.y})`}
           role="button"
+          aria-label={`ブランチ: ${node.name}`}
           tabIndex={node.id ? 0 : -1}
           onClick={() => handleNodeClick(node)}
           onKeyDown={(e) => {
@@ -202,17 +223,15 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
           }}
           style={{ cursor: node.id ? "pointer" : "default" }}
         >
-          {/* 背景と枠線 */}
+          {/* 背景と枠線（色はテーマの CSS 変数で決める） */}
           <rect
+            className={styles.nodeRect}
             width={STORY_NODE_WIDTH}
             height={STORY_NODE_HEIGHT}
             x={-STORY_NODE_WIDTH / 2}
             y={-STORY_NODE_HEIGHT / 2}
-            rx={6}
-            ry={6}
-            fill={node.isLeaf ? "#222" : "#000"}
-            stroke="#222"
-            strokeWidth={1}
+            rx={8}
+            ry={8}
           />
           <rect
             className={styles.nodeInnerRect}
@@ -220,8 +239,8 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
             height={STORY_NODE_HEIGHT - 6}
             x={-(STORY_NODE_WIDTH - 6) / 2}
             y={-(STORY_NODE_HEIGHT - 6) / 2}
-            rx={4}
-            ry={4}
+            rx={6}
+            ry={6}
           />
           {/* テキスト */}
           <foreignObject
@@ -250,8 +269,15 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
+        {/* 初期位置の計算前は描画しない（計算後にフェードインさせる） */}
         <g
-          transform={`translate(${transform.x}, ${transform.y}) scale(${transform.k})`}
+          className={styles.stage}
+          data-ready={transform ? true : undefined}
+          transform={
+            transform
+              ? `translate(${transform.x}, ${transform.y}) scale(${transform.k})`
+              : undefined
+          }
         >
           {/* 物語の道（エッジ） */}
           {layout.edges.map(({ parent, child }) => (
@@ -267,6 +293,9 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
 
       {/* ズームコントロール */}
       <div className={styles.controls}>
+        <span className={styles.zoomLabel} aria-hidden="true">
+          {Math.round((transform?.k ?? 1) * 100)}%
+        </span>
         <button
           type="button"
           className={styles.controlButton}

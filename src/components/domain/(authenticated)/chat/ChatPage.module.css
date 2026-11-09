@@ -1,58 +1,132 @@
-/* チャット画面: サイドバー + 会話本体の2カラム構成 */
-.page {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+/* チャット画面: ヘッダー + 会話本体 + 下部コンポーザの3段構成 */
+
+/* ===== ヘッダー ===== */
+.header {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface-overlay);
+  backdrop-filter: blur(8px);
 }
 
-.body {
-  display: flex;
-  height: 100dvh;
-}
-
-.main {
-  flex-grow: 1;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  background: linear-gradient(
-    180deg,
-    var(--color-background-main) 0%,
-    rgb(0 183 255 / 0.06) 100%
-  );
-}
-
-/* 入力エリア: 下端に固定 */
-.inputArea {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  padding: 10px var(--space-2);
-  border-top: 1px solid var(--color-border);
-  backdrop-filter: blur(6px);
-  background-color: rgb(255 255 255 / 0.8);
-}
-
-.inputRow {
+.headerInner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-1);
+  gap: var(--space-2);
   width: 100%;
+  max-width: var(--content-max-width);
+  height: var(--header-height);
+  margin: 0 auto;
+  padding: 0 var(--space-3);
 }
 
-.inputBar {
-  flex: 1;
+.headerText {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
-.treeLink {
+.headerIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-1);
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
   border-radius: var(--radius-md);
-  color: var(--color-text-main);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
-.treeLink:hover {
-  background-color: rgb(0 0 0 / 0.06);
+.headerTitle {
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+}
+
+.headerMeta {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.headerAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+  font-size: var(--font-size-caption);
+  transition: border-color var(--transition-fast), background-color
+    var(--transition-fast);
+}
+
+.headerAction:hover {
+  border-color: var(--color-border-strong);
+  background-color: var(--color-surface-hover);
+  text-decoration: none;
+}
+
+/* ===== 会話本体 ===== */
+.transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ===== 下部コンポーザ ===== */
+.composerArea {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-3) var(--space-2);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--color-background-main) 40%
+  );
+}
+
+.composerInner {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.hint {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 767px) {
+  .headerInner {
+    height: 60px;
+    padding: 0 var(--space-2) 0 60px;
+  }
+
+  .headerMeta {
+    display: none;
+  }
+
+  .headerActionLabel {
+    display: none;
+  }
+
+  .headerAction {
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .composerArea {
+    padding: var(--space-1) var(--space-2) var(--space-2);
+  }
+
+  .hint {
+    display: none;
+  }
 }
