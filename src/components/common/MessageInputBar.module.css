@@ -1,0 +1,107 @@
+/* メッセージ入力バー: ピル形状の入力欄 */
+.wrapper {
+  width: 100%;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-1);
+}
+
+.fileChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: 4px var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-background-sub);
+  font-size: var(--font-size-caption);
+}
+
+.fileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileRemove {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  color: var(--color-text-secondary);
+}
+
+.bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 5px 6px 5px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-background-main);
+  transition: border-color 0.15s ease;
+}
+
+.bar:hover {
+  border-color: rgb(0 0 0 / 0.28);
+}
+
+.bar:focus-within {
+  border-color: var(--color-primary);
+  border-width: 1.5px;
+}
+
+.toolButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+}
+
+.toolButton:hover {
+  background-color: rgb(0 183 255 / 0.08);
+  color: var(--color-text-main);
+}
+
+.textarea {
+  flex: 1;
+  min-height: 36px;
+  max-height: 320px;
+  padding: 6px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  overflow-y: auto;
+  /* 1行から10行程度まで自然に伸びる（非対応環境では max-height で制限） */
+  field-sizing: content;
+}
+
+.sendButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sendButton .eda-spinner {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+}

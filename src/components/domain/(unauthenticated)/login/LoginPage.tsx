@@ -2,7 +2,7 @@
 
 import PageContainer from "@/components/common/PageContainer";
 import { authClient } from "@/lib/auth-client";
-import { Box, Button } from "@mui/material";
+import styles from "./LoginPage.module.css";
 
 const LoginPage = () => {
   async function handleGoogleSignIn() {
@@ -17,18 +17,15 @@ const LoginPage = () => {
   }
   return (
     <PageContainer>
-      <Box
-        sx={{
-          display: "flex",
-          height: "100vh",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Button variant="contained" onClick={handleGoogleSignIn}>
+      <div className={styles.wrapper}>
+        <button
+          type="button"
+          className={styles.button}
+          onClick={handleGoogleSignIn}
+        >
           Googleログイン
-        </Button>
-      </Box>
+        </button>
+      </div>
     </PageContainer>
   );
 };

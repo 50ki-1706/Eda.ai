@@ -26,6 +26,10 @@
     {
       "package": "reylo",
       "extensions": [".sql", ".reylo.yaml", ".reylo.yml"]
+    },
+    {
+      "package": "typed-css-modules-mapper",
+      "extensions": [".module.css"]
     }
   ],
   "include": [
@@ -37,5 +41,8 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "cmkOptions": {
+    "enabled": true
+  }
 }

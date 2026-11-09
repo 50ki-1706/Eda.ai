@@ -3,10 +3,7 @@ import PageContainer from "@/components/common/PageContainer";
 import Sidebar from "@/components/common/Sidebar";
 import StoryTree from "@/components/domain/(authenticated)/tree/StoryTree";
 import useTree from "@/hooks/domain/chat/tree/useTree";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormGroup from "@mui/material/FormGroup";
-import FormLabel from "@mui/material/FormLabel";
-import Switch from "@mui/material/Switch";
+import styles from "./page.module.css";
 
 export default function Page() {
   const {
@@ -25,30 +22,10 @@ export default function Page() {
       centerLayout={false}
       bgColor={isChecked ? "#A0A0A0" : "#fff"}
     >
-      <div className="w-full h-screen flex">
-        <style jsx global>{`
-          /* ストーリーツリーの「道」の描き分け */
-          .story-path {
-            stroke: #000;
-            stroke-width: 2;
-            fill: none;
-            stroke-linecap: round;
-            opacity: 0.9;
-          }
-          .story-path:hover {
-            stroke: #444;
-            stroke-width: 3;
-          }
-        `}</style>
+      <div className={styles.layout}>
         <Sidebar />
 
-        <div
-          id="treeWrapper"
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-        >
+        <div id="treeWrapper" className={styles.treeWrapper}>
           <StoryTree
             data={branchStructure}
             onNodeClick={(branchId) =>
@@ -56,19 +33,21 @@ export default function Page() {
             }
           />
         </div>
-        <FormGroup className="w-30 flex  items-center pt-2 pr-2">
-          <FormLabel component="legend">merge mode</FormLabel>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isChecked}
-                onChange={() => setIsChecked(!isChecked)}
-              />
-            }
-            label=""
-            sx={{ ml: 1 }}
-          />
-        </FormGroup>
+        <div className={styles.mergeMode}>
+          <span className={styles.mergeModeLabel}>merge mode</span>
+          <label className={styles.switch}>
+            <input
+              type="checkbox"
+              className={styles.switchInput}
+              checked={isChecked}
+              onChange={() => setIsChecked(!isChecked)}
+              aria-label="merge mode を有効にする"
+            />
+            <span className={styles.switchTrack} aria-hidden="true">
+              <span className={styles.switchThumb} />
+            </span>
+          </label>
+        </div>
       </div>
     </PageContainer>
   );

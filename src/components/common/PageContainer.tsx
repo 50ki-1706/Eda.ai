@@ -1,5 +1,6 @@
-import { Container } from "@mui/material";
 import type React from "react";
+import styles from "./PageContainer.module.css";
+
 interface PageContainerProps {
   children: React.ReactNode;
   /**
@@ -7,6 +8,7 @@ interface PageContainerProps {
    * false にすると、幅・高さ100%で素のコンテナとして機能
    */
   centerLayout?: boolean;
+  /** 背景色（"transparent" の場合は透過） */
   bgColor?: string;
 }
 
@@ -15,22 +17,12 @@ const PageContainer: React.FC<PageContainerProps> = ({
   centerLayout = true,
   bgColor = "transparent",
 }) => (
-  <Container
-    maxWidth={false}
-    disableGutters
-    sx={{
-      width: "100%",
-      height: "100vh",
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: centerLayout ? "center" : "stretch",
-      justifyContent: centerLayout ? "center" : "flex-start",
-      backgroundColor: bgColor,
-    }}
+  <div
+    className={`${styles.container} ${centerLayout ? styles.center : styles.stretch}`}
+    style={bgColor !== "transparent" ? { backgroundColor: bgColor } : undefined}
   >
     {children}
-  </Container>
+  </div>
 );
 
 export default PageContainer;

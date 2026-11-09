@@ -1,12 +1,10 @@
-import { CircularProgress, Stack, Typography } from "@mui/material";
+import styles from "./LoadingIndicator.module.css";
 
 export default function LoadingIndicator({ text }: { text: string }) {
   return (
-    <Stack spacing={2} alignItems="center">
-      <CircularProgress />
-      <Typography variant="body2" color="text.secondary">
-        {text}
-      </Typography>
-    </Stack>
+    <div className={styles.wrapper}>
+      <span className="eda-spinner" aria-hidden="true" />
+      <p className={styles.text}>{text}</p>
+    </div>
   );
 }

@@ -1,0 +1,83 @@
+/* ストーリーツリー: 独自実装のSVG分岐ツリー */
+
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.svg:active {
+  cursor: grabbing;
+}
+
+/* 物語の「道」 */
+.edge {
+  stroke: #000;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.edge:hover {
+  stroke: #444;
+  stroke-width: 3;
+}
+
+/* ノードの内枠（白の半透明ライン） */
+.nodeInnerRect {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.25);
+  stroke-width: 1;
+}
+
+/* ノードのラベル */
+.nodeLabel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  padding: 0 5px;
+}
+
+/* ズームコントロール */
+.controls {
+  position: absolute;
+  bottom: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 4px;
+  background-color: rgb(255 255 255 / 0.9);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-1);
+}
+
+.controlButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+}
+
+.controlButton:hover {
+  background-color: rgb(0 0 0 / 0.06);
+}

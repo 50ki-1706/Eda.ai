@@ -1,30 +1,15 @@
 "use client";
 
 import { useLogout } from "@/hooks/common/useLogout";
-import { Button } from "@mui/material";
+import styles from "./LogoutButton.module.css";
 
 const LogoutButton = () => {
   const { handleSignOut } = useLogout();
 
   return (
-    <Button
-      onClick={handleSignOut}
-      variant="outlined"
-      sx={{
-        position: "fixed",
-        top: 16,
-        right: 16,
-        zIndex: 50,
-        color: "black",
-        borderColor: "black",
-        "&:hover": {
-          backgroundColor: "rgba(0, 0, 0, 0.04)",
-          borderColor: "black",
-        },
-      }}
-    >
+    <button type="button" className={styles.button} onClick={handleSignOut}>
       ログアウト
-    </Button>
+    </button>
   );
 };
 

@@ -1,10 +1,7 @@
 "use client";
 
 import type { RawNodeDatum } from "@/types/tree";
-import AddIcon from "@mui/icons-material/Add";
-import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
-import RemoveIcon from "@mui/icons-material/Remove";
-import { IconButton, Stack, Tooltip } from "@mui/material";
+import { Focus, Minus, Plus } from "lucide-react";
 import {
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent,
@@ -14,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import styles from "./StoryTree.module.css";
 import {
   type LayoutNode,
   STORY_NODE_HEIGHT,
@@ -54,9 +52,6 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
   const [transform, setTransform] = useState<Transform>(INITIAL_TRANSFORM);
 
   // ドラッグによるパン状態
-  /** ドラッグで動かした直後のクリックを無視するためのフラグ */
-  const wasDraggingRef = useRef(false);
-
   const dragStateRef = useRef<{
     pointerId: number;
     startX: number;
@@ -65,6 +60,9 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
     originY: number;
     moved: boolean;
   } | null>(null);
+
+  /** ドラッグで動かした直後のクリックを無視するためのフラグ */
+  const wasDraggingRef = useRef(false);
 
   /** コンテナ中央の座標を取得する */
   const getCenter = useCallback(() => {
@@ -143,7 +141,10 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
       if (!drag) return;
       const dx = e.clientX - drag.startX;
       const dy = e.clientY - drag.startY;
-      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.moved = true;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        drag.moved = true;
+        wasDraggingRef.current = true;
+      }
       setTransform((prev) => ({
         ...prev,
         x: drag.originX + dx,
@@ -157,15 +158,6 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
     (e.target as Element).releasePointerCapture?.(e.pointerId);
     dragStateRef.current = null;
   }, []);
-
-  const handlePointerMoveWrapped = useCallback(
-    (e: ReactPointerEvent<SVGSVGElement>) => {
-      const drag = dragStateRef.current;
-      if (drag?.moved) wasDraggingRef.current = true;
-      handlePointerMove(e);
-    },
-    [handlePointerMove],
-  );
 
   const handleNodeClick = useCallback(
     (node: LayoutNode) => {
@@ -223,15 +215,13 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
             strokeWidth={1}
           />
           <rect
+            className={styles.nodeInnerRect}
             width={STORY_NODE_WIDTH - 6}
             height={STORY_NODE_HEIGHT - 6}
             x={-(STORY_NODE_WIDTH - 6) / 2}
             y={-(STORY_NODE_HEIGHT - 6) / 2}
             rx={4}
             ry={4}
-            fill="none"
-            stroke="rgba(255,255,255,0.25)"
-            strokeWidth={1}
           />
           {/* テキスト */}
           <foreignObject
@@ -240,25 +230,7 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
             width={STORY_NODE_WIDTH}
             height={STORY_NODE_HEIGHT}
           >
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontFamily: "monospace",
-                fontSize: 12,
-                fontWeight: 500,
-                textAlign: "center",
-                pointerEvents: "none",
-                userSelect: "none",
-                padding: "0 5px",
-              }}
-            >
-              {label}
-            </div>
+            <div className={styles.nodeLabel}>{label}</div>
           </foreignObject>
         </g>
       );
@@ -267,24 +239,14 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
   );
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: "100%", height: "100%", position: "relative" }}
-    >
+    <div ref={containerRef} className={styles.wrapper}>
       <svg
-        width="100%"
-        height="100%"
+        className={styles.svg}
         role="tree"
         aria-label="ブランチの分岐ツリー"
-        style={{
-          width: "100%",
-          height: "100%",
-          cursor: dragStateRef.current ? "grabbing" : "grab",
-          touchAction: "none",
-        }}
         onWheel={handleWheel}
         onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMoveWrapped}
+        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
@@ -295,7 +257,7 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
           {layout.edges.map(({ parent, child }) => (
             <path
               key={`${parent.id}-${child.id}`}
-              className="story-path"
+              className={styles.edge}
               d={edgePath(parent, child)}
             />
           ))}
@@ -304,33 +266,35 @@ export function StoryTree({ data, onNodeClick }: StoryTreeProps) {
       </svg>
 
       {/* ズームコントロール */}
-      <Stack
-        spacing={1}
-        sx={{
-          position: "absolute",
-          bottom: 16,
-          right: 16,
-          bgcolor: "rgba(255,255,255,0.9)",
-          borderRadius: 2,
-          p: 0.5,
-        }}
-      >
-        <Tooltip title="拡大">
-          <IconButton size="small" onClick={() => zoomByButton(1.2)}>
-            <AddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="縮小">
-          <IconButton size="small" onClick={() => zoomByButton(1 / 1.2)}>
-            <RemoveIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="ルートへ戻る">
-          <IconButton size="small" onClick={resetView}>
-            <CenterFocusStrongIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+      <div className={styles.controls}>
+        <button
+          type="button"
+          className={styles.controlButton}
+          aria-label="拡大"
+          title="拡大"
+          onClick={() => zoomByButton(1.2)}
+        >
+          <Plus size={18} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={styles.controlButton}
+          aria-label="縮小"
+          title="縮小"
+          onClick={() => zoomByButton(1 / 1.2)}
+        >
+          <Minus size={18} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={styles.controlButton}
+          aria-label="ルートへ戻る"
+          title="ルートへ戻る"
+          onClick={resetView}
+        >
+          <Focus size={18} aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,19 @@
+/* ログインページ */
+.wrapper {
+  display: flex;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.button {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-weight: 700;
+}
+
+.button:hover {
+  opacity: 0.9;
+}

@@ -1,17 +1,16 @@
 "use client";
 import MessageInputBar from "@/components/common/MessageInputBar";
 import Sidebar from "@/components/common/Sidebar";
+import Toast from "@/components/common/Toast";
 import { useMessageInput } from "@/hooks/domain/chat/useMessageInput";
 import { apiClient } from "@/lib/trpc";
 import type { Message } from "@/types";
-import ParkIcon from "@mui/icons-material/Park";
-import { Box, Snackbar } from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { TreePine } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ChatMessageList from "./ChatMessageList";
+import styles from "./ChatPage.module.css";
 
 const ChatPage = () => {
   const params = useParams();
@@ -50,15 +49,11 @@ const ChatPage = () => {
     fetchMessages();
   }, [branchId]);
 
-  // メッセージが更新または取得されたら、チャットリストをスクロールする
+  // 最新メッセージが変わったら（取得・送信時）、チャットリストをスクロールする
   useEffect(() => {
-    if (chatListRef.current) {
-      //console.debug()はuseEffectの依存配列のエラーを避けるためのものです。
-      const m = messages;
-      console.debug(m);
-      chatListRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+    if (!latestMessageId) return;
+    chatListRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [latestMessageId]);
 
   const handleCreateBranch = async (messageId: string) => {
     const targetMessage = messages.find((m) => m.id === messageId);
@@ -92,63 +87,34 @@ const ChatPage = () => {
   };
 
   return (
-    <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      <Box sx={{ display: "flex", height: "100dvh" }}>
+    <div className={styles.page}>
+      <div className={styles.body}>
         <Sidebar />
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            display: "grid",
-            gridTemplateRows: "1fr auto",
-            background: (t) =>
-              `linear-gradient(180deg, ${t.palette.background.default} 0%,
-               ${alpha(t.palette.primary.light, 0.06)} 100%)`,
-          }}
-        >
+        <main className={styles.main}>
           <ChatMessageList
             messages={newMessages}
             onCreateBranch={handleCreateBranch}
             chatListRef={chatListRef}
           />
-          <Box
-            sx={(t) => ({
-              position: "sticky",
-              bottom: 0,
-              zIndex: 1,
-              px: { xs: 1.25, md: 2 },
-              py: 1.25,
-              borderTop: `1px solid ${t.palette.divider}`,
-              backdropFilter: "blur(6px)",
-              background: alpha(t.palette.background.paper, 0.8),
-            })}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                px: { xs: 0.5, md: 2 },
-                width: "100%",
-                gap: 1,
-              }}
-            >
-              <MessageInputBar {...messageInput} sx={{ flex: 1 }} />
-              <Link href="/chat/[id]/branch/tree" as={`/chat/${chatId}/tree`}>
-                <ParkIcon />
+          <div className={styles.inputArea}>
+            <div className={styles.inputRow}>
+              <MessageInputBar {...messageInput} className={styles.inputBar} />
+              <Link
+                href="/chat/[id]/branch/tree"
+                as={`/chat/${chatId}/tree`}
+                aria-label="ブランチツリーを表示"
+                title="ブランチツリーを表示"
+                className={styles.treeLink}
+              >
+                <TreePine aria-hidden="true" />
               </Link>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
+            </div>
+          </div>
+        </main>
+      </div>
 
-      <Snackbar
-        open={!!toast}
-        autoHideDuration={2200}
-        onClose={() => setToast(null)}
-        message={toast ?? ""}
-      />
-    </Box>
+      <Toast message={toast} onClose={() => setToast(null)} />
+    </div>
   );
 };
 

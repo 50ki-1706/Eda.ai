@@ -1,0 +1,12 @@
+/* ローディング表示 */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.text {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
