@@ -1,5 +1,6 @@
 "use client";
 
+import type { Message } from "@/types";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import {
   Box,
@@ -9,7 +10,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import type { Message } from "@prisma/client";
 import { memo } from "react";
 import type React from "react";
 import ReactMarkdown from "react-markdown";

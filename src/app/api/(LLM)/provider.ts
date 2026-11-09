@@ -1,4 +1,4 @@
-import type { Message } from "@prisma/client";
+import type { Message } from "@/types";
 import { Gemini } from "./gemini";
 import { OpenRouter } from "./openrouter";
 

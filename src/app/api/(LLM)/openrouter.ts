@@ -1,5 +1,5 @@
+import type { Message } from "@/types";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import type { Message } from "@prisma/client";
 import { generateText } from "ai";
 
 // 利用可能なモデルの定義

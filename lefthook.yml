@@ -7,12 +7,12 @@ pre-commit:
 
 post-merge:
   commands:
-    prisma-db-push-on-schema-change:
+    db-push-on-schema-change:
       run: |
         BASE_REF=${ORIG_HEAD:-HEAD^}
         CHANGED_FILES=$(git diff --name-only "$BASE_REF" HEAD | tr -d '\r')
-        if echo "$CHANGED_FILES" | grep -x -q 'prisma/schema.prisma'; then
-          pnpm exec prisma db push || exit 1
+        if echo "$CHANGED_FILES" | grep -x -q 'db/schema.sql'; then
+          pnpm db:push || exit 1
         fi
         true
     pnpm-install-on-lockfile-change:

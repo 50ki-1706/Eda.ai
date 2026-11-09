@@ -19,7 +19,7 @@ It features a unique branching architecture where each `Chat` can spawn multiple
 | **Styling**     | Tailwind CSS      | v4.0                            |
 | **Components**  | MUI (Material UI) | v7.0.2 (used with Tailwind)     |
 | **Database**    | PostgreSQL        | Docker-based operation          |
-| **ORM**         | Prisma            | v6.6.0                          |
+| **DBアクセス**   | reylo             | v0.7.0（`.sql` 直接インポート、型はライブDBから推論。Prisma は廃止済み） |
 | **Auth**        | Better Auth       | v1.2.7                          |
 | **API/State**   | tRPC, SWR         | Server Actions also used        |
 | **Lint/Format** | Biome             | Executed on commit via Lefthook |
@@ -33,8 +33,8 @@ It features a unique branching architecture where each `Chat` can spawn multiple
   - `api/`: API Routes (Next.js API Handlers)
 - **`components/`**: UI components
 - **`lib/`**: Application configuration and instance initialization
+  - `db.ts`: postgres.js クライアント（アプリのクエリ用・reylo と組み合わせる）
   - `auth.ts`, `auth-client.ts`: Better Auth configuration
-  - `prisma.ts`: Prisma Client instance
   - `trpc.ts`: tRPC configuration
 - **`hooks/`**: Custom React hooks
 - **`types/`**: Type definitions
@@ -47,7 +47,7 @@ For detailed specifications, always refer to the documentation files in the `doc
 | File                           | When to Read                                                                                                                                                  |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs/database.md`             | **For ER diagrams, table definitions, and self-referencing tree structures (Branch/Message).** Read this to understand the full data model and relationships. |
-| `docs/commands.md`             | **For terminal commands.** Read this for setup, execution, database migrations, and quality control commands (pnpm, docker, prisma, biome).                   |
+| `docs/commands.md`             | **For terminal commands.** Read this for setup, execution, database migrations, and quality control commands (pnpm, docker, reylo, biome).                   |
 | `docs/APIDOC.md`               | **For API endpoints.** Read this for tRPC procedures, server actions, and endpoint specifications.                                                            |
 | `docs/page-transition.md`      | **For routing and page flows.** Read this to understand navigation patterns and page transitions.                                                             |
 | `docs/design/design_system.md` | **For UI component rules.** Read this to understand the design system, component conventions, and styling patterns.                                           |

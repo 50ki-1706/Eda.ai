@@ -3,6 +3,16 @@
 このドキュメントでは、Eda.ai プロジェクトの開発および運用で使用する主要なコマンドをまとめています。
 パッケージマネージャーとして **pnpm** を使用しています。
 
+## 開発環境（devenv）
+
+このプロジェクトは **devenv** で開発環境を定義しています（Node.js 24 と pnpm を提供）。
+コマンドはすべて `devenv shell` 経由で実行するか、`devenv shell` に入ってから実行します。
+
+| コマンド | 説明 |
+| :--- | :--- |
+| `devenv shell` | 開発用シェルに入ります（node / pnpm が利用可能になります）。 |
+| `devenv shell '<コマンド>'` | 開発用シェル内でコマンドを一度だけ実行します。 |
+
 ## アプリケーションの起動・停止
 
 | コマンド | 説明 |
@@ -11,13 +21,16 @@
 | `docker compose up -d` | ローカル開発用のPostgreSQLデータベースコンテナをバックグラウンドで起動します。 |
 | `docker compose down` | 起動中のデータベースコンテナを停止・削除します。 |
 
-## データベース操作（Prisma）
+## データベース操作（reylo）
+
+ORMには **Prisma** ではなく **reylo** を使用しています。
+`.sql` ファイル（`src/queries/`）をTypeScriptから直接インポートし、型推論はライブDBのスキーマから行われます。
+スキーマ定義は `db/schema.sql` を編集します。
 
 | コマンド | 説明 |
 | :--- | :--- |
-| `pnpm exec prisma migrate dev` | 開発環境のデータベースにマイグレーションを適用し、Prisma Clientを更新します。 |
-| `pnpm exec prisma generate` | `schema.prisma` からPrisma Clientの型定義を再生成します（ビルド時や手動での更新時に使用します）。 |
-| `pnpm exec prisma studio` | ブラウザ上でデータベースの中身を直接閲覧・編集できるGUIツール（Prisma Studio）を起動します。 |
+| `pnpm db:push` | `db/schema.sql` をローカルDBに適用します（DBコンテナがなければ起動します）。 |
+| `docker compose exec db psql -U root -d db` | psqlでデータベースの中身を直接確認します。 |
 
 ## コード品質管理（Lint, Format, Typecheck）
 
@@ -28,13 +41,13 @@
 | `pnpm format` | Biomeによるコードフォーマットと、安全なLintの自動修正を実行します。ファイルの保存時やコミット前に使用します。 |
 | `pnpm check` | BiomeによるフォーマットエラーとLintエラーの確認を行います（自動修正は行いません）。CIやGitフックで実行されます。 |
 | `pnpm lint` | BiomeによるLintチェックのみを実行します。 |
-| `pnpm typecheck` | TypeScriptの型チェックを実行します（コンパイル結果は出力しません）。型エラーがないか確認します。 |
+| `pnpm typecheck` | 型チェックを実行します（`next typegen` 後に `tsc --noEmit --runExternalCode`）。`.sql` クエリの型は reylo がライブDBから推論します。 |
 
 ## ビルド・本番環境向け
 
 | コマンド | 説明 |
 | :--- | :--- |
-| `pnpm build` | 本番環境用にアプリケーションをビルド・最適化します（実行前に `prisma generate` も自動実行されます）。 |
+| `pnpm build` | 本番環境用にアプリケーションをビルド・最適化します。 |
 | `pnpm start` | ビルド済みの本番用Next.jsサーバーを起動します。実行前に `pnpm build` が必要です。 |
 
 ## その他・セットアップ関連

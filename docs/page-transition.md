@@ -20,10 +20,8 @@ src/app/
 │           ├── branch/
 │           │   └── [branchId]/
 │           │       └── page.tsx    # チャット画面（特定ブランチでの対話）
-│           ├── tree/
-│           │   └── page.tsx        # ブランチ木構造ビュー (react-d3-tree)
-│           └── tree2/
-│               └── page.tsx        # ブランチ木構造ビュー (xyflow/react)
+│           └── tree/
+│               └── page.tsx        # ブランチ木構造ビュー (StoryTree: 独自SVGコンポーネント)
 ├── api/                    # API Routes (tRPC, Better Auth 等)
 ├── layout.tsx              # ルートレイアウト
 └── page.tsx                # アプリのルート（/loginへリダイレクト）
@@ -58,11 +56,10 @@ src/app/
   - チャット上でメッセージを送信したり、既存のメッセージから「分岐」を行ったりすることで、URLパラメータの `[branchId]` が更新される形で画面が切り替わります。
   - サイドバー等からツリー表示へ切り替えることで、**`/chat/[id]/tree`** へ遷移できます。
 
-### 5. ブランチ木構造ビュー (`/chat/[id]/tree` & `/chat/[id]/tree2`)
+### 5. ブランチ木構造ビュー (`/chat/[id]/tree`)
 - **コンポーネント:** `src/app/(authenticated)/chat/[id]/tree/page.tsx` 等
 - **役割:** 特定のチャットに属する会話の分岐（ブランチ）全体を可視化する画面。
-  - **`/tree`**: `react-d3-tree` ライブラリを用いた標準のツリー表示画面です。
-  - **`/tree2`**: `@xyflow/react` を用いた実験的（または別UI）のノードベースグラフ画面です。
+  - **`/tree`**: 独自実装の `StoryTree` コンポーネント（SVG製、パン/ズーム対応）によるツリー表示画面です。
 - **遷移:**
   - サイドバーから過去のチャットを選択（クリック）すると、**まずこのツリー画面 (`/chat/[id]/tree`) へ遷移**します（`useSidebar.ts` の挙動より）。
   - ツリー画面上で特定のブランチノードをクリックすると、そのブランチのチャット画面 **`/chat/[id]/branch/[branchId]`** へ遷移し、対話を再開できます。

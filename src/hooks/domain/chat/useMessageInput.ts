@@ -1,6 +1,6 @@
 import { useMessageInputBase } from "@/hooks/common/useMessageInputBase";
 import { apiClient } from "@/lib/trpc";
-import type { Message } from "@prisma/client";
+import type { Message } from "@/types";
 
 export function useMessageInput(
   _unused: string,
@@ -22,14 +22,7 @@ export function useMessageInput(
         latestMessageId,
         provider: "openrouter",
       });
-      const messageWithDateObject = {
-        ...res,
-        createdAt:
-          typeof res.createdAt === "string"
-            ? new Date(res.createdAt)
-            : res.createdAt,
-      };
-      setMessages([...messages, messageWithDateObject]);
+      setMessages([...messages, res]);
       await new Promise((r) => setTimeout(r, 450));
     },
   );

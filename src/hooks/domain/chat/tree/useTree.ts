@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 function useTree() {
   const params = useParams();
   const router = useRouter();
-  const [translate, setTranslate] = useState<{ x: number; y: number }>();
   const [branchStructure, setBranchStructure] = useState<RawNodeDatum>();
   const [isChecked, setIsChecked] = useState(false);
 
@@ -14,7 +13,7 @@ function useTree() {
     if (typeof params.id !== "string") return;
     (async () => {
       try {
-        // Sidebar から渡される chatId は chat テーブルのものなので project ではなく chat ルーターを利用する
+        // Sidebar から渡される chatId は chat テーブルのものなので chat ルーターを利用する
         const res = await apiClient.chat.branch.structure.query({
           chatId: params.id as string,
         });
@@ -23,17 +22,6 @@ function useTree() {
         console.error("Failed to fetch branch structure (chat):", e);
       }
     })();
-
-    // レイアウト計算（クライアントでのみ実行）
-    const handleResize = () => {
-      setTranslate({
-        x: window.innerWidth / 2 - 100,
-        y: window.innerHeight / 2,
-      });
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, [params.id]);
 
   const handleBranchNavigation = (branchId: string) => {
@@ -68,7 +56,6 @@ function useTree() {
     }
   };
   return {
-    translate,
     handleBranchMerge,
     handleBranchNavigation,
     handleClick,

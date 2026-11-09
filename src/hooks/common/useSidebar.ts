@@ -1,7 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/trpc";
-import type { Chat } from "@prisma/client";
+import type { Chat } from "@/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -15,13 +15,7 @@ export const useSidebar = () => {
     const fetchSidebarData = async () => {
       try {
         const chatRes = await apiClient.chat.getChatsByUserId.query();
-        setChats(
-          chatRes.map((chat) => ({
-            ...chat,
-            createdAt: new Date(chat.createdAt),
-            updatedAt: new Date(chat.updatedAt),
-          })),
-        );
+        setChats(chatRes);
       } catch (error) {
         console.error("Failed to fetch sidebar data:", error);
       }

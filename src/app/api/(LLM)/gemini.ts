@@ -1,6 +1,6 @@
+import type { Message } from "@/types";
 import type { Content, Part } from "@google/genai";
 import { GoogleGenAI } from "@google/genai";
-import type { Message } from "@prisma/client";
 
 export const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"] as const;
 

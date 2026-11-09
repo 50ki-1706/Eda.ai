@@ -1,5 +1,5 @@
+import type { Branch } from "@/types";
 import type { RawNodeDatum } from "@/types/tree";
-import type { Branch } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { getLLMProvider } from "../(LLM)/provider";
 import { ChatRepository } from "../(Repository)/chat";

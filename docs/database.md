@@ -324,5 +324,9 @@ Branch: main
 
 ## 関連ファイル
 
-- Prismaスキーマ: `prisma/schema.prisma`
-- Prismaクライアント: `src/lib/prisma.ts`
+- スキーマ定義（DDL）: `db/schema.sql`（`pnpm db:push` でローカルDBに適用）
+- クエリファイル（reylo）: `src/queries/*.sql`（1ファイル1ステートメント、型はライブDBから推論）
+- データベース接続: `src/lib/db.ts`（postgres.js クライアント）
+- Better Auth 用接続: `src/lib/auth.ts`（kysely + node-postgres のアダプターを使用）
+
+> **注意:** Prismaは廃止されました。DB操作はすべて **reylo** による `.sql` ファイルの直接インポートで行います。

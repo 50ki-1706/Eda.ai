@@ -3,10 +3,10 @@ import MessageInputBar from "@/components/common/MessageInputBar";
 import Sidebar from "@/components/common/Sidebar";
 import { useMessageInput } from "@/hooks/domain/chat/useMessageInput";
 import { apiClient } from "@/lib/trpc";
+import type { Message } from "@/types";
 import ParkIcon from "@mui/icons-material/Park";
 import { Box, Snackbar } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import type { Message } from "@prisma/client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -40,11 +40,7 @@ const ChatPage = () => {
           const res = await apiClient.chat.branch.getMessages.query({
             branchId,
           });
-          const messagesWithDateConversion = res.map((message) => ({
-            ...message,
-            createdAt: new Date(message.createdAt),
-          }));
-          setMessages(messagesWithDateConversion);
+          setMessages(res);
         } catch (error) {
           console.error("Failed to fetch messages:", error);
         }
